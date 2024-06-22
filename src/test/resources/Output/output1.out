@@ -16,7 +16,7 @@ V::::V         V::::Vee::::::::::e  l:::l   E:::E       S::::S           P:::P  
          V:V         ee::::::::::e l:::::lE::::::::::::ES::::::::::::S P:::::::P         r:::r         o::::::o 
           V            eeeeeeeeeee lllllllEEEEEEEEEEEEEE SSSSSSSSSSSS  PPPPPPPPP         rrrrr          oooooo  
 ----------------------------------------------------------------------------------------------------------------
-Actual time: 2024-06-20T22:36:33.110716612
+Actual time: 2024-06-21T20:44:19.876862786
 
 Electronic structure program developed by Ivan Gonzalez Veloso
 
@@ -32,4 +32,4 @@ H    -0.866812     0.601436    -0.000000
 O     0.000000    -0.075792     0.000000
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Nuclear repulsion energy =       7.967300 Hartrees
+Nuclear repulsion energy =      8.0023672 Hartrees
