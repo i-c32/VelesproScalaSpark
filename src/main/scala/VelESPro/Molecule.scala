@@ -7,26 +7,26 @@ import breeze.linalg.{DenseMatrix, DenseVector}
 class Read_mol(input_f : String) {
 
   // Se lee el fichero de entrada
-  val fil = scala.io.Source.fromFile(input_f)
-  val it = fil.getLines().toList
+  private val fil = scala.io.Source.fromFile(input_f)
+  private val it = fil.getLines().toList
   fil.close()
 
   // Se añaden el metodo y la base
-  val A1 = it(0).split("\\s+")
-  val method = A1(0)
-  val basis_set = A1(1)
+  private val A1 = it(0).split("\\s+")
+  val method: String = A1(0)
+  val basis_set: String = A1(1)
   // Se guardan las opciones, tienen que estar todas en la misma linea
-  val opcion = it(1).split("\\s+")
+  val opcion: Array[String] = it(1).split("\\s+")
   // Se lee la carga y la multiplicidad
-  val A2 = it(3).split(" ")
-  val carga = A2(0).toInt
-  val multi = A2(1).toInt
+  private val A2 = it(3).split(" ")
+  val carga: Int = A2(0).toInt
+  val multi: Int = A2(1).toInt
   // Se lee el numero de atomos
-  val n_at = it(4).toInt
+  val n_at: Int = it(4).toInt
   // Se crea la matriz de coordenadas
   var coord: DenseMatrix[Double] = DenseMatrix.zeros[Double](n_at, 3)
   // Se leen las coordenadas
-  var A = it(5).split("\\s+")
+  private var A = it(5).split("\\s+")
   var at = Array(A(0))
   coord(0, ::) := DenseVector(A(1).toDouble, A(2).toDouble, A(3).toDouble).t
 
@@ -41,7 +41,7 @@ class Read_mol(input_f : String) {
 class Molecule(val n_atom: Int, val ch: Int, val multi : Int, val at: Array[String], val coor: DenseMatrix[Double]) {
 
   // Se crea la función para obtener la masa
-  def masa(at: String): Double = at match {
+  private def masa(at: String): Double = at match {
     case "H" => 1.00797
     case "He" => 4.0026
     case "Li" => 6.939
@@ -64,7 +64,7 @@ class Molecule(val n_atom: Int, val ch: Int, val multi : Int, val at: Array[Stri
   }
 
   // Se crea la funcion para obtener el numero atomico de los atomos
-  def num_atomic(at: String): Int = at match {
+  private def num_atomic(at: String): Int = at match {
     case "H" => 1
     case "He" => 2
     case "Li" => 3
@@ -87,7 +87,7 @@ class Molecule(val n_atom: Int, val ch: Int, val multi : Int, val at: Array[Stri
   }
 
   // Se crea la funcion para obtener el numero atomico de los atomos
-  def chg(at: String): Double = at match {
+  private def chg(at: String): Double = at match {
     case "H" => 1.0
     case "He" => 2.0
     case "Li" => 3.0
@@ -110,7 +110,7 @@ class Molecule(val n_atom: Int, val ch: Int, val multi : Int, val at: Array[Stri
   }
 
   // funcion para obtener el centro de masas
-  def c_mass(coord_at: DenseMatrix[Double], mass: DenseVector[Double]): DenseVector[Double] = {
+  private def c_mass(coord_at: DenseMatrix[Double], mass: DenseVector[Double]): DenseVector[Double] = {
     var m_tot : Double = 0.0
     for (i <- mass){
       m_tot += i
@@ -126,14 +126,14 @@ class Molecule(val n_atom: Int, val ch: Int, val multi : Int, val at: Array[Stri
   }
 
   // Se cambian a coordenadas atomicas
-  val coord_at = coor / c_bohr
+  val coord_at : DenseMatrix[Double] = coor / c_bohr
   //Se orienta de acuerdo con los ejes de inercia
   val c_at_i = coord_at
 
   val n_atomic = at.map(x => num_atomic(x)) //numero atomico de los atomos
-  val mass = DenseVector(at.map(x => masa(x))) // masa de los atomos
-  val a_chg = DenseVector(at.map(x => chg(x))) // carga de los atomos
-  val c_mas = c_mass(coord_at, mass) // centro de masa
+  val mass: DenseVector[Double] = DenseVector(at.map(x => masa(x))) // masa de los atomos
+  val a_chg: DenseVector[Double] = DenseVector(at.map(x => chg(x))) // carga de los atomos
+  val c_mas: DenseVector[Double] = c_mass(coord_at, mass) // centro de masa
   val n_at = n_atom // numero de atomos
 
 }
