@@ -1,47 +1,18 @@
 package VelESPro
 
-import Parameters.Par._
+import Parameters.Par
+import VelESPro.App.spark
+import org.apache.spark.sql.functions._
+import com.typesafe.config.{Config, ConfigFactory}
+import org.apache.spark.sql.DataFrame
+import spark.implicits._
 
-import breeze.linalg.{DenseMatrix, DenseVector}
+case class molec(name: String, method: String, basis_set: String, charge: Int, multiplicity: Int)
 
-class Read_mol(input_f : String) {
-
-  // Se lee el fichero de entrada
-  private val fil = scala.io.Source.fromFile(input_f)
-  private val it = fil.getLines().toList
-  fil.close()
-
-  // Se añaden el metodo y la base
-  private val A1 = it(0).split("\\s+")
-  val method: String = A1(0)
-  val basis_set: String = A1(1)
-  // Se guardan las opciones, tienen que estar todas en la misma linea
-  val opcion: Array[String] = it(1).split("\\s+")
-  // Se lee la carga y la multiplicidad
-  private val A2 = it(3).split(" ")
-  val carga: Int = A2(0).toInt
-  val multi: Int = A2(1).toInt
-  // Se lee el numero de atomos
-  val n_at: Int = it(4).toInt
-  // Se crea la matriz de coordenadas
-  var coord: DenseMatrix[Double] = DenseMatrix.zeros[Double](n_at, 3)
-  // Se leen las coordenadas
-  private var A = it(5).split("\\s+")
-  var at = Array(A(0))
-  coord(0, ::) := DenseVector(A(1).toDouble, A(2).toDouble, A(3).toDouble).t
-
-  for (j <- 1 until n_at) {
-    A = it(j + 5).split("\\s+")
-    at :+= A(0)
-    coord(j, ::) := DenseVector(A(1).toDouble, A(2).toDouble, A(3).toDouble).t
-  }
-}
-
-// Se crea la clase molecula con los datos necesarios que se usaran.
-class Molecule(val n_atom: Int, val ch: Int, val multi : Int, val at: Array[String], val coor: DenseMatrix[Double]) {
+class Molecule(in_op_f : String, in_coord_f: String) {
 
   // Se crea la función para obtener la masa
-  private def masa(at: String): Double = at match {
+  private val masa = udf((at: String) => at match {
     case "H" => 1.00797
     case "He" => 4.0026
     case "Li" => 6.939
@@ -61,10 +32,10 @@ class Molecule(val n_atom: Int, val ch: Int, val multi : Int, val at: Array[Stri
     case "Cl" => 35.4527
     case "Ar" => 39.948
     case "K" => 39.102
-  }
+  })
 
   // Se crea la funcion para obtener el numero atomico de los atomos
-  private def num_atomic(at: String): Int = at match {
+  private val num_atomic = udf((at: String) => at match {
     case "H" => 1
     case "He" => 2
     case "Li" => 3
@@ -84,56 +55,48 @@ class Molecule(val n_atom: Int, val ch: Int, val multi : Int, val at: Array[Stri
     case "Cl" => 17
     case "Ar" => 18
     case "K" => 19
-  }
+  })
 
-  // Se crea la funcion para obtener el numero atomico de los atomos
-  private def chg(at: String): Double = at match {
-    case "H" => 1.0
-    case "He" => 2.0
-    case "Li" => 3.0
-    case "Be" => 4.0
-    case "B" => 5.0
-    case "C" => 6.0
-    case "N" => 7.0
-    case "O" => 8.0
-    case "F" => 9.0
-    case "Ne" => 10.0
-    case "Na" => 11.0
-    case "Mg" => 12.0
-    case "Al" => 13.0
-    case "Si" => 14.0
-    case "P" => 15.0
-    case "S" => 16.0
-    case "Cl" => 17.0
-    case "Ar" => 18.0
-    case "K" => 19.0
-  }
+  // Se lee el fichero de entrada para las opciones de la molecula
+  private val ff = scala.io.Source.fromFile(in_op_f)
+  private val fil = ff.mkString
+  ff.close()
+  private val config: Config = ConfigFactory.parseString(fil)
+  val config_mol: Config = config.getConfig("molecule")
 
-  // funcion para obtener el centro de masas
-  private def c_mass(coord_at: DenseMatrix[Double], mass: DenseVector[Double]): DenseVector[Double] = {
-    var m_tot : Double = 0.0
-    for (i <- mass){
-      m_tot += i
-    }
-    var cmass = DenseVector.zeros[Double](3)
-    for (i <- 0 until mass.size){
-      for (j <- 0 until 3) {
-        cmass(j) += mass(i)*coord_at(i,j)
-      }
-    }
-    cmass/m_tot
-    return cmass
-  }
+  // Se crea el dataframe de la molecula
+  private val moll = molec(config_mol.getString("name"),config_mol.getString("method"),config_mol.getString("basis set"),
+    config_mol.getInt("charge"),config_mol.getInt("multiplicity"))
+  private val mol_ini = Seq(moll).toDS()
 
-  // Se cambian a coordenadas atomicas
-  val coord_at : DenseMatrix[Double] = coor / c_bohr
-  //Se orienta de acuerdo con los ejes de inercia
-  val c_at_i = coord_at
+  // Se lee la basis set
+  private val m_line = true
+  val basis_set = spark.read.option("multiLine", m_line).json(Par.ruta_basis +config_mol.getString("basis set"))
 
-  val n_atomic = at.map(x => num_atomic(x)) //numero atomico de los atomos
-  val mass: DenseVector[Double] = DenseVector(at.map(x => masa(x))) // masa de los atomos
-  val a_chg: DenseVector[Double] = DenseVector(at.map(x => chg(x))) // carga de los atomos
-  val c_mas: DenseVector[Double] = c_mass(coord_at, mass) // centro de masa
-  val n_at = n_atom // numero de atomos
+  // Se leen las coordenadas como un dataframe
+  private val c_ini = spark.read
+    .format("csv")
+    .option("header", "true")
+    .option("delimiter", ";")
+    .schema(Par.schema_coord)
+    .load(in_coord_f)
+
+  // Se pasan a coordenadas atomicas
+  private val c_at_1 = c_ini.withColumn("X", col("X").divide(Par.c_bohr))
+    .withColumn("Y", col("Y").divide(Par.c_bohr))
+    .withColumn("Z", col("Z").divide(Par.c_bohr))
+
+  // Se añade la masa de cada atomo y su numero atomico
+  val c_at_f: DataFrame = c_at_1.withColumn("Mass", masa(col("Atom")))
+      .withColumn("Num_at", num_atomic(col("Atom")))
+
+  // Se añade la masa y el centro de masas al dataframe de la molecula
+  private val sum_masa =  c_at_f.agg(sum("Mass")).first.get(0)
+  private val cmas_x = c_at_f.withColumn("Massx", col("X") * col("Mass")).agg(sum("Massx")).first.get(0)
+  private val cmas_y = c_at_f.withColumn("Massy", col("Y") * col("Mass")).agg(sum("Massy")).first.get(0)
+  private val cmas_z = c_at_f.withColumn("Massz", col("Z") * col("Mass")).agg(sum("Massz")).first.get(0)
+
+  val mol_f: DataFrame = mol_ini.withColumn("Mass", lit(sum_masa))
+    .withColumn("Center mass", array(lit(cmas_x),lit(cmas_y),lit(cmas_z)))
 
 }
