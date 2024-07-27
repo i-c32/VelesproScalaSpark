@@ -4,6 +4,8 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import testUtils.ContextProvider
 
+import scala.collection.mutable
+
 class MoleculeTest extends AnyWordSpec with Matchers with ContextProvider {
 
   val in_mol1 = "/home/iveloso/IdeaProjects/Scala_VelESPro/src/test/resources/Input/input1.vel"
@@ -23,13 +25,13 @@ class MoleculeTest extends AnyWordSpec with Matchers with ContextProvider {
     }
   }
 
-  val mass1 = List(1.00797, 1.00797, 15.9994) //Lista de las masas de los atomos
-  val c_ch1 = List(1, 1, 8) // Lista de la numeros atomicos de los atomos
+  private val mass1 = List(1.00797, 1.00797, 15.9994) //Lista de las masas de los atomos
+  private val c_ch1 = List(1, 1, 8) // Lista de la numeros atomicos de los atomos
   //Lista de las coordenadas en bohrs
-  val c_x1 = List(1.6380369107226893, -1.6380369107226893, 0.0000000000000000)
-  val c_y1 = List(1.1365487595188923, 1.1365487595188923, -0.14322574511573555)
-  val c_z1 = List(-0.0000000000000000, 0.0000000000000000, -0.0000000000000000)
-  val c_mass1 = Array(0.00000000, -1.7316119591243956E-5, 0.00000000)
+  private val c_x1 = List(1.6380369107226893, -1.6380369107226893, 0.0000000000000000)
+  private val c_y1 = List(1.1365487595188923, 1.1365487595188923, -0.14322574511573555)
+  private val c_z1 = List(-0.0000000000000000, 0.0000000000000000, -0.0000000000000000)
+  private val c_mass1 = List(0.00000000, -1.7316119591243956E-5, 0.00000000)
   it should {
     "obtain the atoms in borhs" in {
       val c_x = r_mol.c_at_f.collect().map(_.getAs[Double]("X")).toList
@@ -48,7 +50,8 @@ class MoleculeTest extends AnyWordSpec with Matchers with ContextProvider {
       masa shouldBe mass1
     }
     "obtain the center of mass" in {
-      val c_mass = r_mol.mol_f.collect().map(_.getAs[Double]("Center mass")).toList
+      val getvalue = (x1: String, x2: String) => r_mol.mol_f.select(x1).collect().map(_.getAs[Double](x2)).apply(0)
+      val c_mass = List(getvalue("Center_mass.X","X"), getvalue("Center_mass.Y","Y"), getvalue("Center_mass.Z","Z"))
       c_mass shouldBe c_mass1
     }
   }

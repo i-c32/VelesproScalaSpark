@@ -1,0 +1,8 @@
+molecule {
+  "name" : "C2h",
+  "method" : "HF",
+  "basis set" : "STO-3G",
+  "charge" : 0,
+  "multiplicity" : 1,
+  "num atom" : 8
+}

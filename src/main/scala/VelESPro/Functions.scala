@@ -1,13 +1,31 @@
 package VelESPro
 
+import org.apache.spark.sql.{DataFrame, Dataset}
+import org.apache.spark.sql.functions.{col, collect_list, concat_ws}
+
 import scala.math.{pow, sqrt}
 
-class dist {
-  // Calculo de la distancia
-  def dst(coord1: Array[Double], coord2: Array[Double]): Double = {
+class transformations_df {
+  //Funcion para hacer la transposicion entre columnas y filas (Hay que tener cuidado que si los nombres son iguales se agrupan)
+  def TransposeDF(df: DataFrame, columns: Seq[String], pivotCol: String): DataFrame = {
+    val columnsValue = columns.map(x => "'" + x + "', " + x)
+    val stackCols = columnsValue.mkString(",")
+    val df_1 = df.selectExpr(pivotCol, "stack(" + columns.size + "," + stackCols + ")")
+      .select(pivotCol, "col0", "col1")
 
-    val dst = sqrt(pow(coord2(0)-coord1(0),2) + pow(coord2(1)-coord1(1),2) + pow(coord2(2)-coord1(2),2))
-    dst
+    val final_df = df_1.groupBy(col("col0")).pivot(pivotCol).agg(concat_ws("", collect_list(col("col1"))))
+      .withColumnRenamed("col0", pivotCol)
+    final_df
+  }
+
+  // Funcion para cambiar los nombres con un map
+  def mapFields[T](ds: Dataset[T], fieldNameMap: Map[String, String]): DataFrame = {
+    // make sure the fields are present - note this is not a free operation
+    val fieldNames = ds.schema.fieldNames.toSet
+    val newNames = fieldNameMap.filterKeys(fieldNames).map{
+      case (oldFieldName, newFieldName) => col(oldFieldName).as(newFieldName)
+    }.toSeq
+    ds.select(newNames: _*)
   }
 }
 

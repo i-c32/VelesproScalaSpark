@@ -4,7 +4,7 @@ import Parameters.Par
 import VelESPro.App.spark
 import org.apache.spark.sql.functions._
 import com.typesafe.config.{Config, ConfigFactory}
-import org.apache.spark.sql.DataFrame
+import org.apache.spark.sql.{DataFrame, Dataset}
 import spark.implicits._
 
 case class molec(name: String, method: String, basis_set: String, charge: Int, multiplicity: Int)
@@ -71,7 +71,7 @@ class Molecule(in_op_f : String, in_coord_f: String) {
 
   // Se lee la basis set
   private val m_line = true
-  val basis_set = spark.read.option("multiLine", m_line).json(Par.ruta_basis +config_mol.getString("basis set"))
+  private val basis_set = spark.read.option("multiLine", m_line).json(Par.ruta_basis +config_mol.getString("basis set"))
 
   // Se leen las coordenadas como un dataframe
   private val c_ini = spark.read
@@ -87,16 +87,38 @@ class Molecule(in_op_f : String, in_coord_f: String) {
     .withColumn("Z", col("Z").divide(Par.c_bohr))
 
   // Se añade la masa de cada atomo y su numero atomico
-  val c_at_f: DataFrame = c_at_1.withColumn("Mass", masa(col("Atom")))
-      .withColumn("Num_at", num_atomic(col("Atom")))
+  private val c_at_2: DataFrame = c_at_1.withColumn("Mass", masa(col("Atom")))
+    .withColumn("Num_at", num_atomic(col("Atom")))
+
+  //Se añade las basis set
+  val c_at_f: DataFrame = c_at_2.join(basis_set, Seq("Atom"))
+  val coord_id = c_at_f.select("Atom", "X", "Y", "Z")withColumn("AtomID", monotonically_increasing_id) // Se crea una columna con un id de los atomos
+
+  // Se añade la columna con las distancias
+  // Contruct the map for the transpose the coordinates
+  val t_df = new transformations_df
+  val l_atoms = coord_id.select("Atom").collect().map(_(0).toString).toList
+  val seq_atom = (0 until config_mol.getInt("num atom")).toList.map(_.toString)
+  val M_inic = Map( "AtomID" -> "Coord")
+  val M_atom = (seq_atom zip l_atoms).toMap
+  val M_final = M_inic ++ M_atom
+  val trans_DF = t_df.TransposeDF(coord_id, Seq("X", "Y", "Z"), "AtomID")
+  val newNames = t_df.mapFields(trans_DF, M_final)
 
   // Se añade la masa y el centro de masas al dataframe de la molecula
   private val sum_masa =  c_at_f.agg(sum("Mass")).first.get(0)
-  private val cmas_x = c_at_f.withColumn("Massx", col("X") * col("Mass")).agg(sum("Massx")).first.get(0)
-  private val cmas_y = c_at_f.withColumn("Massy", col("Y") * col("Mass")).agg(sum("Massy")).first.get(0)
-  private val cmas_z = c_at_f.withColumn("Massz", col("Z") * col("Mass")).agg(sum("Massz")).first.get(0)
+  private val cmas_x = c_at_f.withColumn("Massx", col("X") * col("Mass")).agg(sum("Massx")/sum_masa).first.get(0)
+  private val cmas_y = c_at_f.withColumn("Massy", col("Y") * col("Mass")).agg(sum("Massy")/sum_masa).first.get(0)
+  private val cmas_z = c_at_f.withColumn("Massz", col("Z") * col("Mass")).agg(sum("Massz")/sum_masa).first.get(0)
 
   val mol_f: DataFrame = mol_ini.withColumn("Mass", lit(sum_masa))
-    .withColumn("Center mass", array(lit(cmas_x),lit(cmas_y),lit(cmas_z)))
+    .withColumn(
+      "Center_mass",
+      struct(
+        lit(cmas_x).as("X"),
+        lit(cmas_y).as("Y"),
+        lit(cmas_z).as("Z"),
+      ).as("Center_mass")
+    )
 
 }
