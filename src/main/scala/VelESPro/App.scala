@@ -71,7 +71,7 @@ object App {
     IntroPrint()
 
     // Se lee la molecula y se guardan los datos en un dataframe
-    val r_mol = new Molecule(in_op_f, in_coord_f)
+    val r_mol = new Molecule(in_op_f)
 
 //
 //    // Print the input file
