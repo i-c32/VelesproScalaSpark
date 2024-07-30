@@ -21,19 +21,19 @@ class Molecule(in_op_f : String) {
   val config_mol: Config = config.getConfig("molecule")
   private val li_molec = config_mol.getAnyRefList("name").toArray().map(_.toString)
   private val n_at_molec = li_molec.map(mol => config_mol.getInt(mol + ".num_atom"))
-  val t_at_nam = li_molec zip n_at_molec
+  private val t_at_nam = li_molec zip n_at_molec
 
   // Se crea el dataframe de las moleculas
   private val moll = li_molec.map(mol => molec(mol, config_mol.getString(mol + ".method"), config_mol.getString(mol + ".basis set"),
     config_mol.getInt(mol + ".charge"), config_mol.getInt(mol + ".multiplicity")))
-  val mol_ini = moll.toList.toDS()
+  private val mol_ini = moll.toList.toDS()
 
   // Se lee la basis set
   private val m_line = true
   private val basis_set = spark.read.option("multiLine", m_line).json(Par.ruta_basis +config_mol.getString("water.basis set"))
 
   // Se leen las coordenadas como un dataframe
-  val lf_coord = li_molec.map(x => Par.ruta + config_mol.getString(x + ".coord")).toSeq
+  private val lf_coord = li_molec.map(x => Par.ruta + config_mol.getString(x + ".coord")).toSeq
   private val c_ini = f_mol.read_coord(lf_coord, t_at_nam)
 
   // Se pasan a coordenadas atomicas

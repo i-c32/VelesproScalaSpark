@@ -3,10 +3,8 @@ package VelESPro
 import Parameters.Par
 import VelESPro.App.spark
 import org.apache.spark.sql.functions._
-import com.typesafe.config.{Config, ConfigFactory}
 import org.apache.spark.sql.expressions.Window
-import org.apache.spark.sql.{DataFrame, Dataset}
-import spark.implicits._
+import org.apache.spark.sql.DataFrame
 
 import scala.sys.exit
 
