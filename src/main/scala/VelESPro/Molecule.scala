@@ -5,6 +5,7 @@ import VelESPro.App.spark
 import org.apache.spark.sql.functions._
 import com.typesafe.config.{Config, ConfigFactory}
 import org.apache.spark.sql.DataFrame
+import org.apache.spark.sql.expressions.Window
 import spark.implicits._
 
 class Molecule(in_op_f : String) {
@@ -19,7 +20,8 @@ class Molecule(in_op_f : String) {
   private val config: Config = ConfigFactory.parseString(fil)
   val config_mol: Config = config.getConfig("molecule")
   private val li_molec = config_mol.getAnyRefList("name").toArray().map(_.toString)
-  //private val num_molec = li_molec.size()
+  private val n_at_molec = li_molec.map(mol => config_mol.getInt(mol + ".num_atom"))
+  val t_at_nam = li_molec zip n_at_molec
 
   // Se crea el dataframe de las moleculas
   private val moll = li_molec.map(mol => molec(mol, config_mol.getString(mol + ".method"), config_mol.getString(mol + ".basis set"),
@@ -31,11 +33,8 @@ class Molecule(in_op_f : String) {
   private val basis_set = spark.read.option("multiLine", m_line).json(Par.ruta_basis +config_mol.getString("water.basis set"))
 
   // Se leen las coordenadas como un dataframe
-  val lf_coord = li_molec.map(x => Par.ruta + config_mol.getString(x + ".coord"))
-  private val c_ini1 = f_mol.read_coord(lf_coord(0), li_molec(0))
-  private val c_ini2 = f_mol.read_coord(lf_coord(1), li_molec(1))
-  private val c_ini = c_ini1.union(c_ini2)
-
+  val lf_coord = li_molec.map(x => Par.ruta + config_mol.getString(x + ".coord")).toSeq
+  private val c_ini = f_mol.read_coord(lf_coord, t_at_nam)
 
   // Se pasan a coordenadas atomicas
   private val c_at_1 = c_ini.withColumn("X", col("X").divide(Par.c_bohr))
@@ -54,7 +53,7 @@ class Molecule(in_op_f : String) {
   // Contruct the map for the transpose the coordinates
   val t_df = new transformations_df
   val l_atoms = coord_id.select("Atom").collect().map(_(0).toString).toList
-  val seq_atom = (0 until config_mol.getInt("num atom")).toList.map(_.toString)
+  val seq_atom = (0 until t_at_nam.map(_._2).sum).toList.map(_.toString)
   val M_inic = Map( "AtomID" -> "Coord")
   val M_atom = (seq_atom zip l_atoms).toMap
   val M_final = M_inic ++ M_atom

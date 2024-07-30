@@ -7,7 +7,7 @@ molecule {
   basis set = "STO-3G",
   charge = 0,
   multiplicity = 1,
-  num atom = 3
+  num_atom = 3
   }
 
   C2 {
@@ -16,6 +16,6 @@ molecule {
   basis set = "STO-3G",
   charge = 0,
   multiplicity = 1,
-  num atom = 4
+  num_atom = 3
   }
 }
