@@ -47,7 +47,7 @@ class Molecule(in_op_f : String) {
 
   //Se añade las basis set
   val c_at_f: DataFrame = c_at_2.join(basis_set, Seq("Atom"))
-  val coord_id = c_at_f.select("Atom", "X", "Y", "Z")withColumn("AtomID", monotonically_increasing_id) // Se crea una columna con un id de los atomos
+  val coord_id = c_at_f.select("Atom", "X", "Y", "Z").withColumn("AtomID", monotonically_increasing_id) // Se crea una columna con un id de los atomos
 
   // Se añade la columna con las distancias
   // Contruct the map for the transpose the coordinates
@@ -61,6 +61,9 @@ class Molecule(in_op_f : String) {
   val newNames = t_df.mapFields(trans_DF, M_final)
 
   // Se añade la masa y el centro de masas al dataframe de la molecula
+  val mm = c_at_f.groupBy("Molec").agg(sum("Mass"))
+  val mm1 = c_at_f.groupBy("Molec").agg(sum($"X" * $"Mass").alias("MassX"),sum($"Y" * $"Mass").alias("MassY"),sum($"Z" * $"Mass").alias("MassZ"))
+  val mm2 = mm.join(mm1,Seq("Molec"))
   private val sum_masa =  c_at_f.agg(sum("Mass")).first.get(0)
   private val cmas_x = c_at_f.withColumn("Massx", col("X") * col("Mass")).agg(sum("Massx")/sum_masa).first.get(0)
   private val cmas_y = c_at_f.withColumn("Massy", col("Y") * col("Mass")).agg(sum("Massy")/sum_masa).first.get(0)

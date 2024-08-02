@@ -248,9 +248,9 @@ class Func_molecule {
     }
 
 
-    df.withColumn("Value", array(lists.map(lit):_*))
+    df.withColumn("Molec", array(lists.map(lit):_*))
       .withColumn("rn", row_number().over(Window.orderBy(lit(1))) - 1)
-      .withColumn("Value", expr("Value[rn]"))
+      .withColumn("Molec", expr("Molec[rn]"))
       .drop("rn")
 
   }

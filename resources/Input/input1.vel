@@ -11,11 +11,11 @@ molecule {
   }
 
   C2 {
-  coord = "input1_coord.vel"
+  coord = "C2_coord.vel"
   method = "HF",
   basis set = "STO-3G",
   charge = 0,
   multiplicity = 1,
-  num_atom = 3
+  num_atom = 4
   }
 }

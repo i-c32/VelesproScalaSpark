@@ -17,39 +17,10 @@ object App {
     .appName("VelESPro")
     .getOrCreate()
 
-  def IntroPrint():Unit = {
-
-    val writer = new PrintWriter(new File(output_f))
-
-    writer.printf("----------------------------------------------------------------------------------------------------------------\n" +
-      "VVVVV           VVVVVVV            llllll EEEEEEEEEEEEEE  SSSSSSSSSSSS PPPPPPPPPPPPPP                           \n" +
-      "V:::V           V:::::V            l::::l E::::::::::::E S::::::::::::SP:::::::::::::P                          \n" +
-      "V:::V           V:::::V            l::::l E::::::::::::ES::::SSSSS::::SP:::::PPPPP::::P                         \n" +
-      "V:::V           V:::::V            l::::l EE::::EEEEE::ES::::S    SSSSSPP::::P    P::::P                        \n" +
-      "V:::V           V::::V eeeeeeeeee   l:::l   E:::E   EEEES::::S           P:::P    P::::Prrr   rrrrr     oooooo  \n" +
-      "V::::V         V::::Vee::::::::::e  l:::l   E:::E       S::::S           P:::P    P::::Pr::rrr:::::r   o::::::o \n" +
-      " V::::V       V::::Ve::::eeeee::::eel:::l   E::::EEEEEE  ::::SSS         P:::PPPPP::::P r:::::::::::r o::::::::o\n" +
-      "  V::::V     V::::Ve::::e     e::::el:::l   E:::::::::E  SS:::::SSSS     P:::::::::::P  rr::::rrr::::ro:::oo:::o\n" +
-      "   V::::V   V::::V e:::::eeeee:::::el:::l   E:::::::::E    SSS::::::S    P:::PPPPPPPP    r:::r   r:::ro::o  o::o\n" +
-      "    V::::V V::::V  e::::::::::::::e l:::l   E::::EEEEEE       SSSSS::S   P:::P           r:::r   rrrrro::o  o::o\n" +
-      "     V::::V::::V   e::::eeeeeeeeee  l:::l   E:::E                 S:::S  P:::P           r:::r        o::o  o::o\n" +
-      "      V:::::::V    e:::::e          l:::l   E:::E   EEEE          S:::S  P:::P           r:::r        o::o  o::o\n" +
-      "       V:::::V     e::::::e        l:::::lEE::::EEEE:::ESSSSSS    S:::SPP:::::PP         r:::r        o:::oo:::o\n" +
-      "        V:::V       e::::::eeeeeee l:::::lE::::::::::::ES:::::SSSSS:::SP:::::::P         r:::r        o::::::::o\n" +
-      "         V:V         ee::::::::::e l:::::lE::::::::::::ES::::::::::::S P:::::::P         r:::r         o::::::o \n" +
-      "          V            eeeeeeeeeee lllllllEEEEEEEEEEEEEE SSSSSSSSSSSS  PPPPPPPPP         rrrrr          oooooo  \n" +
-      "----------------------------------------------------------------------------------------------------------------\n")
-    val currentDateTime: LocalDateTime = LocalDateTime.now()
-    writer.printf("Actual time: " + currentDateTime + "\n")
-    writer.printf("\n")
-    writer.printf("Electronic structure program developed by Ivan Gonzalez Veloso\n")
-    writer.printf("\n")
-    writer.printf("\n")
-    writer.close()
-  }
-
   def main(args : Array[String]) {
 
+    // Tiempo de inicio
+    val currentDateTime: LocalDateTime = LocalDateTime.now()
     //val dist = new dist()
 
 //    // Calculo de la energia de repulsion
@@ -64,14 +35,9 @@ object App {
 //      return ener
 //    }
 
-    // Se abre el fichero que se va a escribir de manera limpia
-    val writer = new PrintWriter(new FileOutputStream(new File(output_f), true))
-
-    // Se escribe el fichero de entrada
-    IntroPrint()
-
     // Se lee la molecula y se guardan los datos en un dataframe
     val r_mol = new Molecule(in_op_f)
+
 
 //
 //    // Print the input file
@@ -95,6 +61,10 @@ object App {
 //    writer.close()
 //
 //    //val sim = new Simetria(mol, r_mol.n_at)
+
+    //Se imprime los resultados como parquet
+    r_mol.mol_f.coalesce(1).write.mode("overwrite").parquet(output_f)
+    r_mol.c_at_f.coalesce(1).write.mode("append").parquet(output_f)
 
     spark.stop()
   }
