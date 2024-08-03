@@ -1,8 +1,12 @@
 molecule {
-  "name" : "water",
-  "method" : "HF",
-  "basis set" : "STO-3G",
-  "charge" : 0,
-  "multiplicity" : 1,
-  "num atom" : 3
+  name = ["water"],
+
+  water {
+  coord = "input1_coord.vel"
+  method = "HF",
+  basis set = "STO-3G",
+  charge = 0,
+  multiplicity = 1,
+  num_atom = 3
+  }
 }

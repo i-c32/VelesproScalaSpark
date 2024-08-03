@@ -1,9 +1,10 @@
 package VelESPro
 
+import Parameters.Par
 import Parameters.Par._
 import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.functions.lit
 
-import java.io.{File, FileOutputStream, PrintWriter}
 import java.time.LocalDateTime
 
 /**
@@ -11,13 +12,13 @@ import java.time.LocalDateTime
  */
 object App {
 
-  val spark = SparkSession
+  val spark: SparkSession = SparkSession
     .builder()
     .master("local[*]")
     .appName("VelESPro")
     .getOrCreate()
 
-  def main(args : Array[String]) {
+  def main(args : Array[String]): Unit = {
 
     // Tiempo de inicio
     val currentDateTime: LocalDateTime = LocalDateTime.now()
@@ -62,8 +63,11 @@ object App {
 //
 //    //val sim = new Simetria(mol, r_mol.n_at)
 
+    // Se añade el timpo de entrada
+    val mol_f1 = r_mol.mol_f.withColumn(Par.c_time, lit(currentDateTime))
+
     //Se imprime los resultados como parquet
-    r_mol.mol_f.coalesce(1).write.mode("overwrite").parquet(output_f)
+    mol_f1.coalesce(1).write.mode("overwrite").parquet(output_f)
     r_mol.c_at_f.coalesce(1).write.mode("append").parquet(output_f)
 
     spark.stop()

@@ -10,7 +10,7 @@ class MoleculeTest extends AnyWordSpec with Matchers with ContextProvider {
 
   val in_mol1 = "/home/iveloso/IdeaProjects/Scala_VelESPro/src/test/resources/Input/input1.vel"
   val in_coo1 = "/home/iveloso/IdeaProjects/Scala_VelESPro/src/test/resources/Input/input1_coord.vel"
-  val r_mol = new Molecule(in_mol1, in_coo1)
+  val r_mol = new Molecule(in_mol1)
 
   "Molecule" should {
     "obtain the configuration" which {

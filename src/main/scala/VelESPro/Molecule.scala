@@ -5,13 +5,14 @@ import VelESPro.App.spark
 import org.apache.spark.sql.functions._
 import com.typesafe.config.{Config, ConfigFactory}
 import org.apache.spark.sql.DataFrame
-import org.apache.spark.sql.expressions.Window
 import spark.implicits._
+
+import scala.sys.exit
 
 class Molecule(in_op_f : String) {
 
   // Se inicia la clase de las funciones de molecula
-  val f_mol = new Func_molecule
+  private val f_mol = new Func_molecule
 
   // Se lee el fichero de entrada para las opciones de la molecula
   private val ff = scala.io.Source.fromFile(in_op_f)
@@ -34,20 +35,31 @@ class Molecule(in_op_f : String) {
 
   // Se leen las coordenadas como un dataframe
   private val lf_coord = li_molec.map(x => Par.ruta + config_mol.getString(x + ".coord")).toSeq
-  private val c_ini = f_mol.read_coord(lf_coord, t_at_nam)
+  private val c_ini = f_mol.read_coord(lf_coord, li_molec)
+
+  // Se compruba que la suma del numero de atomos del fichero de config y el de los ficheros es igual
+  if (n_at_molec.sum > c_ini.count()) {
+    Console.err.println("Number of atoms in config file is > number of atoms in coord file")
+    exit(1)
+  }
+  else if (n_at_molec.sum < c_ini.count()) {
+    Console.err.println("Number of atoms in config file is < number of atoms in coord file")
+    exit(1)
+  }
 
   // Se pasan a coordenadas atomicas
-  private val c_at_1 = c_ini.withColumn("X", col("X").divide(Par.c_bohr))
-    .withColumn("Y", col("Y").divide(Par.c_bohr))
-    .withColumn("Z", col("Z").divide(Par.c_bohr))
+  private val c_at_1 = c_ini.withColumn(Par.c_cx, col(Par.c_cx).divide(Par.c_bohr))
+    .withColumn(Par.c_cy, col(Par.c_cy).divide(Par.c_bohr))
+    .withColumn(Par.c_cz, col(Par.c_cz).divide(Par.c_bohr))
 
   // Se añade la masa de cada atomo y su numero atomico
-  private val c_at_2: DataFrame = c_at_1.withColumn("Mass", f_mol.masa(col("Atom")))
-    .withColumn("Num_at", f_mol.num_atomic(col("Atom")))
+  private val c_at_2: DataFrame = c_at_1.withColumn(Par.c_m_at, f_mol.masa(col(Par.c_atom)))
+    .withColumn("Num_at", f_mol.num_atomic(col(Par.c_atom)))
 
   //Se añade las basis set
-  val c_at_f: DataFrame = c_at_2.join(basis_set, Seq("Atom"))
-  val coord_id = c_at_f.select("Atom", "X", "Y", "Z").withColumn("AtomID", monotonically_increasing_id) // Se crea una columna con un id de los atomos
+  val c_at_f: DataFrame = c_at_2.join(basis_set, Seq(Par.c_atom))
+
+  val coord_id = c_at_f.select(Par.c_atom, "X", "Y", "Z").withColumn("AtomID", monotonically_increasing_id) // Se crea una columna con un id de los atomos
 
   // Se añade la columna con las distancias
   // Contruct the map for the transpose the coordinates
@@ -61,22 +73,11 @@ class Molecule(in_op_f : String) {
   val newNames = t_df.mapFields(trans_DF, M_final)
 
   // Se añade la masa y el centro de masas al dataframe de la molecula
-  val mm = c_at_f.groupBy("Molec").agg(sum("Mass"))
-  val mm1 = c_at_f.groupBy("Molec").agg(sum($"X" * $"Mass").alias("MassX"),sum($"Y" * $"Mass").alias("MassY"),sum($"Z" * $"Mass").alias("MassZ"))
-  val mm2 = mm.join(mm1,Seq("Molec"))
-  private val sum_masa =  c_at_f.agg(sum("Mass")).first.get(0)
-  private val cmas_x = c_at_f.withColumn("Massx", col("X") * col("Mass")).agg(sum("Massx")/sum_masa).first.get(0)
-  private val cmas_y = c_at_f.withColumn("Massy", col("Y") * col("Mass")).agg(sum("Massy")/sum_masa).first.get(0)
-  private val cmas_z = c_at_f.withColumn("Massz", col("Z") * col("Mass")).agg(sum("Massz")/sum_masa).first.get(0)
-
-  val mol_f: DataFrame = mol_ini.withColumn("Mass", lit(sum_masa))
-    .withColumn(
-      "Center_mass",
-      struct(
-        lit(cmas_x).as("X"),
-        lit(cmas_y).as("Y"),
-        lit(cmas_z).as("Z"),
-      ).as("Center_mass")
-    )
+  private val df_s_mass = c_at_f.groupBy(Par.c_name).agg(sum(Par.c_m_at).alias("T_Mass"))
+  private val df_cm = c_at_f.groupBy(Par.c_name).agg(sum($"X" * $"Mass").alias("MassXX"),sum($"Y" * $"Mass").alias("MassYY"),sum($"Z" * $"Mass").alias("MassZZ"))
+  private val df_cm1 = df_s_mass.join(df_cm,Seq(Par.c_name))
+  private val df_cm2 = df_cm1.withColumn(Par.c_cm, array($"MassXX" / $"T_Mass", $"MassYY" / $"T_Mass", $"MassZZ" / $"T_Mass"))
+  private val df_cm3 = mol_ini.join(df_cm2,Seq(Par.c_name))
+  val mol_f: DataFrame = df_cm3.select(Par.c_name,"method","basis_set","charge","multiplicity",Par.c_m_m,Par.c_cm).toDF()
 
 }

@@ -175,83 +175,71 @@ class Func_molecule {
     case "Te" => 52
     case "I" => 53
     case "Xe" => 54
-    case "Cs" => 132.90545
-    case "Ba" => 137.34
-    case "La" => 138.90547
-    case "Ce" => 140.116
-    case "Pr" => 140.90765
-    case "Nd" => 144.242
-    case "Pm" => 145.0
-    case "Sm" => 150.36
-    case "Eu" => 151.964
-    case "Gd" => 157.25
-    case "Tb" => 158.92535
-    case "Dy" => 162.500
-    case "Ho" => 164.93032
-    case "Er" => 167.259
-    case "Tm" => 168.93421
-    case "Yb" => 173.054
-    case "Lu" => 174.9668
-    case "Hf" => 178.49
-    case "Ta" => 180.948
-    case "W" => 183.85
-    case "Re" => 186.2
-    case "Os" => 190.2
-    case "Ir" => 192.2
-    case "Pt" => 195.09
-    case "Au" => 196.967
-    case "Hg" => 200.59
-    case "Tl" => 204.37
-    case "Pb" => 207.19
-    case "Bi" => 208.980
-    case "Po" => 209.0
-    case "At" => 210.0
-    case "Rn" => 222.0
-    case "Fr" => 223.0
-    case "Ra" => 226.0
-    case "Ac" => 227.0
-    case "Th" => 232.038
-    case "Pa" => 231.036
-    case "U" => 238.029
-    case "Np" => 237.0
-    case "Pu" => 244.0
-    case "Am" => 243.0
-    case "Cm" => 247.0
-    case "Bk" => 247.0
-    case "Cf" => 251.0
-    case "Es" => 252.0
-    case "Fm" => 257.0
-    case "Md" => 258.0
-    case "No" => 259.0
-    case "Lw" => 262.0
+    case "Cs" => 55
+    case "Ba" => 56
+    case "La" => 57
+    case "Ce" => 58
+    case "Pr" => 59
+    case "Nd" => 60
+    case "Pm" => 61
+    case "Sm" => 62
+    case "Eu" => 63
+    case "Gd" => 64
+    case "Tb" => 65
+    case "Dy" => 66
+    case "Ho" => 67
+    case "Er" => 68
+    case "Tm" => 69
+    case "Yb" => 70
+    case "Lu" => 71
+    case "Hf" => 72
+    case "Ta" => 73
+    case "W" => 74
+    case "Re" => 75
+    case "Os" => 76
+    case "Ir" => 77
+    case "Pt" => 78
+    case "Au" => 79
+    case "Hg" => 80
+    case "Tl" => 81
+    case "Pb" => 82
+    case "Bi" => 83
+    case "Po" => 84
+    case "At" => 85
+    case "Rn" => 86
+    case "Fr" => 87
+    case "Ra" => 88
+    case "Ac" => 89
+    case "Th" => 90
+    case "Pa" => 91
+    case "U" => 92
+    case "Np" => 93
+    case "Pu" => 94
+    case "Am" => 95
+    case "Cm" => 96
+    case "Bk" => 97
+    case "Cf" => 98
+    case "Es" => 99
+    case "Fm" => 100
+    case "Md" => 101
+    case "No" => 102
+    case "Lw" => 103
   })
 
   //Lectura de las coordenadas
-  def read_coord(f_coord: Seq[String], t_at_nam: Array[(String, Int)]): DataFrame = {
-    val df = spark.read
-      .format("csv")
-      .option("header", "true")
-      .option("delimiter", ";")
+  def read_coord(f_coord: Seq[String], l_nam: Array[String]): DataFrame = {
+
+    val cabez = Seq(Par.c_name, Par.c_atom, Par.c_cx, Par.c_cy, Par.c_cz)
+    val mm = f_coord zip l_nam
+
+    val df1 = mm.map(a => spark.read
+      .format(Par.file_type)
+      .option("header", Par.first_row_header)
+      .option("delimiter", Par.delimite)
       .schema(Par.schema_coord)
-      .load(f_coord:_*)
+      .load(a._1).toDF().withColumn(Par.c_name, lit(a._2)))
 
-    val lists = t_at_nam.flatMap(a => List.fill(a._2)(a._1))
-
-    // Se compruba que la suma del numero de atomos del fichero de config y el de los ficheros es igual
-    if (lists.length > df.count()) {
-      Console.err.println("Number of atoms in config file is > number of atoms in coord file")
-      exit(1)
-    }
-    else if (lists.length < df.count()) {
-      Console.err.println("Number of atoms in config file is < number of atoms in coord file")
-      exit(1)
-    }
-
-
-    df.withColumn("Molec", array(lists.map(lit):_*))
-      .withColumn("rn", row_number().over(Window.orderBy(lit(1))) - 1)
-      .withColumn("Molec", expr("Molec[rn]"))
-      .drop("rn")
+    df1.reduce((df1, df2) => df1.join(df2, cabez, "full_outer").localCheckpoint(true))
 
   }
 }
