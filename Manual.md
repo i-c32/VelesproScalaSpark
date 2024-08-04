@@ -22,6 +22,7 @@ V::::V         V::::Vee::::::::::e  l:::l   E:::E       S::::S           P:::P  
 # Introduction
 
 # Program
+Los archivos de coordenadas hacen referencia a la ruta desde la raiz del repositorio.
 
 ## Install
 

@@ -34,7 +34,8 @@ class Molecule(in_op_f : String) {
   private val basis_set = spark.read.option("multiLine", m_line).json(Par.ruta_basis +config_mol.getString("water.basis set"))
 
   // Se leen las coordenadas como un dataframe
-  private val lf_coord = li_molec.map(x => Par.ruta + config_mol.getString(x + ".coord")).toSeq
+  private val ruta_c = System.getProperty("user.dir")
+  private val lf_coord = li_molec.map(x => ruta_c + "/" + config_mol.getString(x + ".coord")).toSeq
   private val c_ini = f_mol.read_coord(lf_coord, li_molec)
 
   // Se compruba que la suma del numero de atomos del fichero de config y el de los ficheros es igual

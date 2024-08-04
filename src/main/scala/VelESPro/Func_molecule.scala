@@ -3,10 +3,7 @@ package VelESPro
 import Parameters.Par
 import VelESPro.App.spark
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.expressions.Window
 import org.apache.spark.sql.DataFrame
-
-import scala.sys.exit
 
 case class molec(name: String, method: String, basis_set: String, charge: Int, multiplicity: Int)
 
