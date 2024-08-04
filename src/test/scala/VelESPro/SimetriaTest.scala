@@ -7,7 +7,7 @@ import Parameters.Par._
 class SimetriaTest extends AnyFlatSpec with Matchers{
 
   val input1 = "/home/iveloso/IdeaProjects/Scala_VelESPro/src/test/resources/Input/input1.vel"
-  val r_mol = new Molecule(in_op_f, in_coord_f)
+  val r_mol = new Molecule(in_op_f)
   //val sim = new Simetria(mol, r_mol.n_at)
 
   "Simetria" should "obtain the inertia matrix" in {

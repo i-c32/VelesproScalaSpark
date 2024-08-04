@@ -1,0 +1,21 @@
+molecule {
+  name = ["water", "C4"],
+
+  water {
+    coord = "src/test/resources/Input/input1_coord.vel"
+    method = "HF",
+    basis set = "STO-3G",
+    charge = 0,
+    multiplicity = 1,
+    num_atom = 3
+  }
+
+  C4 {
+    coord = "src/test/resources/Input/Simmetry/C4_coord.vel"
+    method = "MP2",
+    basis set = "6-31G",
+    charge = 0,
+    multiplicity = 1,
+    num_atom = 18
+    }
+}

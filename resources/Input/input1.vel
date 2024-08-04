@@ -2,7 +2,7 @@ molecule {
   name = ["water", "C2"],
 
   water {
-  coord = "input1_coord.vel"
+  coord = "resources/Input/input1_coord.vel"
   method = "HF",
   basis set = "STO-3G",
   charge = 0,
@@ -11,7 +11,7 @@ molecule {
   }
 
   C2 {
-  coord = "C2_coord.vel"
+  coord = "resources/Input/C2_coord.vel"
   method = "HF",
   basis set = "STO-3G",
   charge = 0,
