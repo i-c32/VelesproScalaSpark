@@ -2,6 +2,7 @@ package VelESPro
 
 import Parameters.Par
 import VelESPro.App.spark
+import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.sql.DataFrame
 
 import java.io.{FileNotFoundException, IOException}
@@ -37,15 +38,13 @@ class Error {
   }
 
   def readc_conf_file(filename:String): Either[String,DataFrame] = {
-    try {
+    val fs = FileSystem.get(spark.sparkContext.hadoopConfiguration)
+    val fileExists = fs.exists(new Path(filename))
+    if (fileExists) {
       val m_line = true
       Right(spark.read.option("multiLine", m_line).json(Par.ruta_basis + filename))
-    } catch {
-      case e: FileNotFoundException =>
+    } else {
         Console.err.println("ERROR_1002: The basis "+filename+" do not exist, or it is not found in this folder.")
-        Left("ERROR_1002")
-      case e: IOException =>
-        Console.err.println("Had an IOException trying to read that file")
         Left("ERROR_1002")
     }
   }
