@@ -29,3 +29,7 @@ Los archivos de coordenadas hacen referencia a la ruta desde la raiz del reposit
 ## Options
 
 ## Methods
+
+## Errors
+
+* __ERROR_1001__ = The config file do not exist, or it is not found in this folder

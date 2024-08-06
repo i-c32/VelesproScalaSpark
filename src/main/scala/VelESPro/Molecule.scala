@@ -7,18 +7,15 @@ import com.typesafe.config.{Config, ConfigFactory}
 import org.apache.spark.sql.DataFrame
 import spark.implicits._
 
-import scala.sys.exit
-
 class Molecule(in_op_f : String) {
 
   // Se inicia la clase de las funciones de molecula
   private val f_mol = new Func_molecule
+  private val error = new Error
 
   // Se lee el fichero de entrada para las opciones de la molecula
-  private val ff = scala.io.Source.fromFile(in_op_f)
-  private val fil = ff.mkString
-  ff.close()
-  private val config: Config = ConfigFactory.parseString(fil)
+  private val t_f = error.check_file(in_op_f)
+  private val config: Config = ConfigFactory.parseString(t_f)
   val config_mol: Config = config.getConfig("molecule")
   private val li_molec = config_mol.getAnyRefList("name").toArray().map(_.toString)
   private val n_at_molec = li_molec.map(mol => config_mol.getInt(mol + ".num_atom"))
@@ -30,23 +27,19 @@ class Molecule(in_op_f : String) {
   private val mol_ini = moll.toList.toDS()
 
   // Se lee la basis set
-  private val m_line = true
-  private val basis_set = spark.read.option("multiLine", m_line).json(Par.ruta_basis +config_mol.getString("water.basis set"))
+  private val basis = error.readc_conf_file(config_mol.getString("water.basis set"))
+  private val basis_set = basis match {
+    case Left(e) => spark.emptyDataFrame //En caso de error se saca un dataframe vacio
+    case Right(r) => basis.right.get.toDF()
+  }
 
   // Se leen las coordenadas como un dataframe
   private val ruta_c = System.getProperty("user.dir")
   private val lf_coord = li_molec.map(x => ruta_c + "/" + config_mol.getString(x + ".coord")).toSeq
   private val c_ini = f_mol.read_coord(lf_coord, li_molec)
 
-  // Se compruba que la suma del numero de atomos del fichero de config y el de los ficheros es igual
-  if (n_at_molec.sum > c_ini.count()) {
-    Console.err.println("Number of atoms in config file is > number of atoms in coord file")
-    exit(1)
-  }
-  else if (n_at_molec.sum < c_ini.count()) {
-    Console.err.println("Number of atoms in config file is < number of atoms in coord file")
-    exit(1)
-  }
+  // Se comprueba que la suma del numero de atomos del fichero de config y el de los ficheros es igual
+  error.diff_n_molec(n_at_molec.sum, c_ini.count().toInt)
 
   // Se pasan a coordenadas atomicas
   private val c_at_1 = c_ini.withColumn(Par.c_cx, col(Par.c_cx).divide(Par.c_bohr))

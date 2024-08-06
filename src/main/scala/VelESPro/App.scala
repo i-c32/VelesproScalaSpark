@@ -39,20 +39,6 @@ object App {
     // Se lee la molecula y se guardan los datos en un dataframe
     val r_mol = new Molecule(in_op_f)
 
-
-//
-//    // Print the input file
-//    writer.printf("Input file:\n")
-//    writer.printf("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n")
-//    writer.printf("Method: %s Basis: %s\n", r_mol.method, r_mol.basis_set)
-//    for (j <- 0 to r_mol.opcion.size-1) {
-//      writer.printf("%s\n", r_mol.opcion(j))
-//    }
-//    writer.write("%1d %1d\n",mol.ch, mol.multi)
-//    for (j <- 0 to r_mol.n_at-1) {
-//      writer.print("%s %12.6f %12.6f %12.6f\n", mol.at(j), mol.coor(j)(0), mol.coor(j)(1), mol.coor(j)(2))
-//    }
-//    writer.print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n")
 //
 //    // repulsion electronica
 //    val e_rep_nuc = f_e_rep_n(r_mol.n_at, mol)

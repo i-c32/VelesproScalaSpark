@@ -7,7 +7,7 @@ import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
 trait ContextProvider extends BeforeAndAfterAll with BeforeAndAfterEach {
   self: Suite =>
 
-  @transient var spark: SparkSession = _
+  @transient var spark2: SparkSession = _
 
   @transient var sparkContext: SparkContext = _
 
@@ -16,22 +16,22 @@ trait ContextProvider extends BeforeAndAfterAll with BeforeAndAfterEach {
   override def beforeAll(): Unit = {
     super.beforeAll()
 
-    spark = SparkSession
+    spark2 = SparkSession
       .builder()
       .appName("spark session")
       .master("local[*]")
       .getOrCreate()
 
-    sparkContext = spark.sparkContext
+    sparkContext = spark2.sparkContext
 
-    sqlContext = spark.sqlContext
+    sqlContext = spark2.sqlContext
   }
 
   override def afterAll(): Unit = {
     super.afterAll()
 
-    if (spark != null) {
-      spark.stop()
+    if (spark2 != null) {
+      spark2.stop()
     }
   }
 
