@@ -39,12 +39,12 @@ class Error {
 
   def readc_conf_file(filename:String): Either[String,DataFrame] = {
     val fs = FileSystem.get(spark.sparkContext.hadoopConfiguration)
-    val fileExists = fs.exists(new Path(filename))
+    val fileExists = fs.exists(new Path(Par.ruta_basis + filename))
     if (fileExists) {
       val m_line = true
       Right(spark.read.option("multiLine", m_line).json(Par.ruta_basis + filename))
     } else {
-        Console.err.println("ERROR_1002: The basis "+filename+" do not exist, or it is not found in this folder.")
+        Console.err.println("ERROR_1002: The basis "+Par.ruta_basis+filename+" do not exist, or it is not found in this folder.")
         Left("ERROR_1002")
     }
   }

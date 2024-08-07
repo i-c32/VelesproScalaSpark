@@ -40,7 +40,7 @@ class MoleculeTest extends AnyWordSpec with Matchers {
     coord(0.0000000000000000, -0.14322574511573555, 0.0000000000000000)
   ).toDF()
   //Lista de valores del centro de masas
-  private val c_mass1 = List(0.00000000, -1.7316119591243956E-5, 0.00000000)
+  private val c_mass1 = List(0.00000000, -1.731192085097209E-5, 0.00000000)
 
   it should {
     "obtain the atoms in borhs" in {
@@ -65,10 +65,11 @@ class MoleculeTest extends AnyWordSpec with Matchers {
   val nombre2 = "C4"
   val r_mol1 = new Molecule(in_mol2)
 
-  "Molecule with only one molecule" should {
+  "Molecule with two molecule" should {
     "obtain the configuration" which {
-      "obtain the basis set" in {
-        r_mol.config_mol.getString(nombre2 + ".basis set") shouldBe "6-31G"
+      "obtain both basis set" in {
+        r_mol1.config_mol.getString(nombre + ".basis set") shouldBe "STO-3G"
+        r_mol1.config_mol.getString(nombre2 + ".basis set") shouldBe "6-31G"
       }
     }
   }

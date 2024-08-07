@@ -13,7 +13,7 @@ molecule {
   C2 {
   coord = "resources/Input/C2_coord.vel"
   method = "HF",
-  basis set = "STO-3G",
+  basis set = "6-31G",
   charge = 0,
   multiplicity = 1,
   num_atom = 4

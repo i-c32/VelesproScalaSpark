@@ -51,7 +51,11 @@ class Molecule(in_op_f : String) {
     .withColumn("Num_at", f_mol.num_atomic(col(Par.c_atom)))
 
   //Se añade las basis set
-  val c_at_f: DataFrame = c_at_2.join(basis_set, Seq(Par.c_atom))
+  val c_at_f: DataFrame = if (basis_set.count() > 0) {
+    c_at_2.join(basis_set, Seq(Par.c_atom))
+  } else {
+    c_at_2
+  }
 
   val coord_id = c_at_f.select(Par.c_atom, "X", "Y", "Z").withColumn("AtomID", monotonically_increasing_id) // Se crea una columna con un id de los atomos
 
