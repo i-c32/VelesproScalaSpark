@@ -62,7 +62,7 @@ class MoleculeTest extends AnyWordSpec with Matchers {
   }
 
   val in_mol2 = "/home/iveloso/IdeaProjects/Scala_VelESPro/src/test/resources/Input/input2.vel"
-  val nombre2 = "C4"
+  val nombre2 = "test_at"
   val r_mol1 = new Molecule(in_mol2)
 
   "Molecule with two molecule" should {

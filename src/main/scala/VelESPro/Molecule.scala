@@ -1,6 +1,7 @@
 package VelESPro
 
 import Parameters.Par
+import Config_check._
 import VelESPro.App.spark
 import org.apache.spark.sql.functions._
 import com.typesafe.config.{Config, ConfigFactory}
@@ -20,6 +21,8 @@ class Molecule(in_op_f : String) {
   private val li_molec = config_mol.getAnyRefList("name").toArray().map(_.toString)
   private val n_at_molec = li_molec.map(mol => config_mol.getInt(mol + ".num_atom"))
   private val t_at_nam = li_molec zip n_at_molec
+  private val mol_op_bohr = li_molec.map(mol => config_mol.getOBoolean(mol + ".option.bohr"))
+  private val list_bol_bohr = mol_op_bohr.map(x => x.nonEmpty)
 
   // Se crea el dataframe de las moleculas
   private val moll = li_molec.map(mol => molec(mol, config_mol.getString(mol + ".method"), config_mol.getString(mol + ".basis set"),
@@ -41,7 +44,8 @@ class Molecule(in_op_f : String) {
   // Se comprueba que la suma del numero de atomos del fichero de config y el de los ficheros es igual
   error.diff_n_molec(n_at_molec.sum, c_ini.count().toInt)
 
-  // Se pasan a coordenadas atomicas
+  // Se pasan a coordenadas atomicas en el caso de que no exista la opcion: borh = true
+  //li_molec
   private val c_at_1 = c_ini.withColumn(Par.c_cx, col(Par.c_cx).divide(Par.c_bohr))
     .withColumn(Par.c_cy, col(Par.c_cy).divide(Par.c_bohr))
     .withColumn(Par.c_cz, col(Par.c_cz).divide(Par.c_bohr))

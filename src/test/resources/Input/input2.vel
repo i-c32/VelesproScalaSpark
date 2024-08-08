@@ -1,5 +1,5 @@
 molecule {
-  name = ["water", "C4"],
+  name = ["water", "test_at"],
 
   water {
     coord = "src/test/resources/Input/input1_coord.vel"
@@ -10,12 +10,16 @@ molecule {
     num_atom = 3
   }
 
-  C4 {
-    coord = "src/test/resources/Input/Simmetry/C4_coord.vel"
+  test_at {
+    coord = "src/test/resources/Input/input2_coord.vel"
     method = "MP2",
     basis set = "6-31G",
     charge = 0,
     multiplicity = 1,
-    num_atom = 18
+    num_atom = 103,
+    option = {
+      bohr = true,
+      symmetry = true
+    }
     }
 }
