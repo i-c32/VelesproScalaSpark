@@ -1,8 +1,12 @@
 package VelESPro
 
+import Parameters.Par
 import VelESPro.App.spark
+import org.apache.spark.sql.functions.col
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+
+import scala.math.BigDecimal.RoundingMode
 
 case class coord(X: Double, Y: Double, Z: Double)
 
@@ -40,7 +44,9 @@ class MoleculeTest extends AnyWordSpec with Matchers {
     coord(0.0000000000000000, -0.14322574511573555, 0.0000000000000000)
   ).toDF()
   //Lista de valores del centro de masas
-  private val c_mass1 = List(0.00000000, -1.731192085097209E-5, 0.00000000)
+  private val c_mass1 = List(BigDecimal("0E-15").setScale(15), BigDecimal("-0.000017311920851").setScale(15), BigDecimal("0E-15").setScale(15))
+  //Convert the scala bigDecimal to java Bigdecimal that is the return value for spark
+  private val c_mass1_j = c_mass1.map(_.bigDecimal)
 
   it should {
     "obtain the atoms in borhs" in {
@@ -56,8 +62,9 @@ class MoleculeTest extends AnyWordSpec with Matchers {
       masa shouldBe mass1
     }
     "obtain the center of mass" in {
-      val c_mass = r_mol.mol_f.collect().map(_.getAs[Seq[Double]]("Center_mass")).apply(0).toList
-      c_mass shouldBe c_mass1
+      val cast_cm = r_mol.mol_f.withColumn(Par.c_cm, col(Par.c_cm).cast("array<decimal(25,15)>"))
+      val c_mass = cast_cm.collect().map(_.getAs[Seq[BigDecimal]]("Center_mass")).apply(0).toList
+      c_mass shouldBe c_mass1_j
     }
   }
 
@@ -66,7 +73,10 @@ class MoleculeTest extends AnyWordSpec with Matchers {
   val r_mol1 = new Molecule(in_mol2)
 
   //Lista de valores del centro de masas
-  private val c_mass2 = List(0.24216318999483818, -0.080676815136674446, -0.09521388579237054)
+  private val c_mass2 = List(BigDecimal("0.24216318999483818").setScale(15, RoundingMode.HALF_EVEN),
+    BigDecimal("-0.080676815136674446").setScale(15, RoundingMode.HALF_EVEN),
+    BigDecimal("-0.09521388579237054").setScale(15, RoundingMode.HALF_EVEN))
+  private val c_mass2_j = c_mass2.map(_.bigDecimal)
 
   "Molecule with two molecule" should {
     "obtain the configuration" which {
@@ -79,10 +89,11 @@ class MoleculeTest extends AnyWordSpec with Matchers {
   it should {
     "obtain the center of mass" in {
       val name = r_mol1.mol_f.collect().map(_.getAs[String]("Name"))
-      val c_mass = r_mol1.mol_f.collect().map(_.getAs[Seq[Double]]("Center_mass").toList)
+      val cast_cm = r_mol1.mol_f.withColumn(Par.c_cm, col(Par.c_cm).cast("array<decimal(25,15)>"))
+      val c_mass = cast_cm.collect().map(_.getAs[Seq[Double]]("Center_mass").toList)
       val map_nm = name.zip(c_mass).toMap
-      map_nm("water") shouldBe c_mass1
-      map_nm("test_at") shouldBe c_mass2
+      map_nm("water") shouldBe c_mass1_j
+      map_nm("test_at") shouldBe c_mass2_j
     }
   }
 }
