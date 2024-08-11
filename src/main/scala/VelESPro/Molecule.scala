@@ -59,7 +59,7 @@ class Molecule(in_op_f : String) {
 
   //Se añade las basis set
   val c_at_f: DataFrame = if (basis_set.count() > 0) {
-    c_at_2.join(basis_set, Seq(Par.c_atom))
+    c_at_2.join(basis_set, Seq(Par.c_atom),"left_outer")
   } else {
     c_at_2
   }

@@ -65,12 +65,24 @@ class MoleculeTest extends AnyWordSpec with Matchers {
   val nombre2 = "test_at"
   val r_mol1 = new Molecule(in_mol2)
 
+  //Lista de valores del centro de masas
+  private val c_mass2 = List(0.24216318999483818, -0.080676815136674446, -0.09521388579237054)
+
   "Molecule with two molecule" should {
     "obtain the configuration" which {
       "obtain both basis set" in {
         r_mol1.config_mol.getString(nombre + ".basis set") shouldBe "STO-3G"
         r_mol1.config_mol.getString(nombre2 + ".basis set") shouldBe "6-31G"
       }
+    }
+  }
+  it should {
+    "obtain the center of mass" in {
+      val name = r_mol1.mol_f.collect().map(_.getAs[String]("Name"))
+      val c_mass = r_mol1.mol_f.collect().map(_.getAs[Seq[Double]]("Center_mass").toList)
+      val map_nm = name.zip(c_mass).toMap
+      map_nm("water") shouldBe c_mass1
+      map_nm("test_at") shouldBe c_mass2
     }
   }
 }
