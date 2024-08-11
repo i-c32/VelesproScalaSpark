@@ -14,6 +14,7 @@ object Par {
   val c_m_m = "T_Mass" // Columna masa de las moleculas
   val c_time = "Time" // Columna de timestamp
   val c_cm = "Center_mass" // Columna con las coordenas del centro de masas
+  val c_bset = "Basis set" // Columna con el nombre de las basis set
 
   //Schema for the molecule
   val schema_coord: StructType = StructType(Array(

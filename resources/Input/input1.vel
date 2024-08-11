@@ -2,20 +2,23 @@ molecule {
   name = ["water", "C2"],
 
   water {
-  coord = "resources/Input/input1_coord.vel"
-  method = "HF",
-  basis set = "STO-3G",
-  charge = 0,
-  multiplicity = 1,
-  num_atom = 3
+    coord = "resources/Input/input1_coord.vel"
+    method = "HF",
+    basis set = "STO-3G",
+    charge = 0,
+    multiplicity = 1,
+    num_atom = 3,
+    option = {
+      bohr = false,
+    }
   }
 
   C2 {
-  coord = "resources/Input/C2_coord.vel"
-  method = "HF",
-  basis set = "6-31G",
-  charge = 0,
-  multiplicity = 1,
-  num_atom = 4
+    coord = "resources/Input/C2_coord.vel"
+    method = "HF",
+    basis set = "6-31G",
+    charge = 0,
+    multiplicity = 1,
+    num_atom = 4
   }
 }

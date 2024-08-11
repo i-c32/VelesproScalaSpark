@@ -28,6 +28,8 @@ Los archivos de coordenadas hacen referencia a la ruta desde la raiz del reposit
 
 ## Options
 
+* bohr = true|false. Se usa para saber si los atomos estan en angstrons o bohrs. Se considera que estan en angstroms por defecto.
+
 ## Methods
 
 ## Errors

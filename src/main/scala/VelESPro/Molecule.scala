@@ -5,7 +5,7 @@ import Config_check._
 import VelESPro.App.spark
 import org.apache.spark.sql.functions._
 import com.typesafe.config.{Config, ConfigFactory}
-import org.apache.spark.sql.DataFrame
+import org.apache.spark.sql.{Column, DataFrame}
 import spark.implicits._
 
 class Molecule(in_op_f : String) {
@@ -22,7 +22,9 @@ class Molecule(in_op_f : String) {
   private val n_at_molec = li_molec.map(mol => config_mol.getInt(mol + ".num_atom"))
   private val t_at_nam = li_molec zip n_at_molec
   private val mol_op_bohr = li_molec.map(mol => config_mol.getOBoolean(mol + ".option.bohr"))
-  private val list_bol_bohr = mol_op_bohr.map(x => x.nonEmpty)
+  private val list_bol_bohr = mol_op_bohr.map(x => if (x.nonEmpty) x.get else false)
+  private val map_mol_bolbohr: Map[String, Boolean] = li_molec.zip(list_bol_bohr).toMap
+  private val df_bohr = map_mol_bolbohr.toSeq.toDF(Par.c_name, "bbohr")
 
   // Se crea el dataframe de las moleculas
   private val moll = li_molec.map(mol => molec(mol, config_mol.getString(mol + ".method"), config_mol.getString(mol + ".basis set"),
@@ -45,14 +47,15 @@ class Molecule(in_op_f : String) {
   error.diff_n_molec(n_at_molec.sum, c_ini.count().toInt)
 
   // Se pasan a coordenadas atomicas en el caso de que no exista la opcion: borh = true
-  //li_molec
-  private val c_at_1 = c_ini.withColumn(Par.c_cx, col(Par.c_cx).divide(Par.c_bohr))
-    .withColumn(Par.c_cy, col(Par.c_cy).divide(Par.c_bohr))
-    .withColumn(Par.c_cz, col(Par.c_cz).divide(Par.c_bohr))
+  private val c_ini_b = c_ini.join(df_bohr, Seq(Par.c_name))
+  private val c_at_1 = c_ini_b.withColumn(Par.c_cx, when(col("bbohr") === false, col(Par.c_cx).divide(Par.c_bohr)).otherwise(col(Par.c_cx)))
+    .withColumn(Par.c_cy, when(col("bbohr") === false, col(Par.c_cy).divide(Par.c_bohr)).otherwise(col(Par.c_cy)))
+    .withColumn(Par.c_cz, when(col("bbohr") === false, col(Par.c_cz).divide(Par.c_bohr)).otherwise(col(Par.c_cz)))
+    .drop("bbohr")
 
   // Se añade la masa de cada atomo y su numero atomico
   private val c_at_2: DataFrame = c_at_1.withColumn(Par.c_m_at, f_mol.masa(col(Par.c_atom)))
-    .withColumn("Num_at", f_mol.num_atomic(col(Par.c_atom)))
+    .withColumn(Par.c_nat, f_mol.num_atomic(col(Par.c_atom)))
 
   //Se añade las basis set
   val c_at_f: DataFrame = if (basis_set.count() > 0) {
