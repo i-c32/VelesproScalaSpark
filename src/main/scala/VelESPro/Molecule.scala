@@ -20,7 +20,7 @@ class Molecule(in_op_f : String) {
   val config_mol: Config = config.getConfig("molecule")
   private val li_molec = config_mol.getAnyRefList("name").toArray().map(_.toString)
   private val n_at_molec = li_molec.map(mol => config_mol.getInt(mol + ".num_atom"))
-  private val t_at_nam = li_molec zip n_at_molec
+  private val t_at_nam = (li_molec zip n_at_molec).sortBy(x => x._1)
   private val mol_op_bohr = li_molec.map(mol => config_mol.getOBoolean(mol + ".option.bohr"))
   private val list_bol_bohr = mol_op_bohr.map(x => if (x.nonEmpty) x.get else false)
   private val map_mol_bolbohr: Map[String, Boolean] = li_molec.zip(list_bol_bohr).toMap
@@ -65,11 +65,14 @@ class Molecule(in_op_f : String) {
   }
 
   val coord_id = c_at_f.select(Par.c_atom, "X", "Y", "Z").withColumn("AtomID", monotonically_increasing_id) // Se crea una columna con un id de los atomos
+  val mm = c_at_f.orderBy(asc("Name")).withColumn("AtomID", monotonically_increasing_id)
 
   // Se añade la columna con las distancias
   // Contruct the map for the transpose the coordinates
   val t_df = new transformations_df
   val l_atoms = coord_id.select("Atom").collect().map(_(0).toString).toList
+  val mm1 = t_at_nam.map(1 to _._2)
+  val mm2 = mm1.map(y => y.sliding(3).toList.map(_.map(x => (x-1)%3)))
   val seq_atom = (0 until t_at_nam.map(_._2).sum).toList.map(_.toString)
   val M_inic = Map( "AtomID" -> "Coord")
   val M_atom = (seq_atom zip l_atoms).toMap
