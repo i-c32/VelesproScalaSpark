@@ -2,15 +2,18 @@ package VelESPro
 
 import Parameters.Par
 import VelESPro.App.spark
-import org.apache.spark.sql.functions._
+import org.apache.spark.sql.functions.{lit, udf}
 import org.apache.spark.sql.DataFrame
+import org.apache.spark.sql.expressions.UserDefinedFunction
+
+import scala.math._
 
 case class molec(name: String, method: String, basis_set: String, charge: Int, multiplicity: Int)
 
 class Func_molecule {
 
   // Se crea la función para obtener la masa
-  val masa = udf((at: String) => at match {
+  val masa: UserDefinedFunction = udf((at: String) => at match {
     case "H" => 1.00797
     case "He" => 4.0026
     case "Li" => 6.939
@@ -117,7 +120,7 @@ class Func_molecule {
   })
 
   // Se crea la funcion para obtener el numero atomico de los atomos
-  val num_atomic = udf((at: String) => at match {
+  val num_atomic: UserDefinedFunction = udf((at: String) => at match {
     case "H" => 1
     case "He" => 2
     case "Li" => 3
@@ -239,4 +242,9 @@ class Func_molecule {
     df1.reduce((df1, df2) => df1.join(df2, cabez, "full_outer").localCheckpoint(true))
 
   }
+
+  //Distancia
+  val eucDistance: UserDefinedFunction = udf((x1: Double, y1: Double, z1: Double, x2: Double, y2: Double, z2: Double) =>
+    sqrt(pow(x2 - x1, 2) + pow(y2 - y1, 2) + pow(z2 - z1, 2))
+  )
 }

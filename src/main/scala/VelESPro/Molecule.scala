@@ -5,7 +5,7 @@ import Config_check._
 import VelESPro.App.spark
 import org.apache.spark.sql.functions._
 import com.typesafe.config.{Config, ConfigFactory}
-import org.apache.spark.sql.{Column, DataFrame}
+import org.apache.spark.sql.DataFrame
 import spark.implicits._
 
 class Molecule(in_op_f : String) {
@@ -58,27 +58,34 @@ class Molecule(in_op_f : String) {
     .withColumn(Par.c_nat, f_mol.num_atomic(col(Par.c_atom)))
 
   //Se añade las basis set
-  val c_at_f: DataFrame = if (basis_set.count() > 0) {
+  val c_at_3: DataFrame = if (basis_set.count() > 0) {
     c_at_2.join(basis_set, Seq(Par.c_atom),"left_outer")
   } else {
     c_at_2
   }
 
-  val coord_id = c_at_f.select(Par.c_atom, "X", "Y", "Z").withColumn("AtomID", monotonically_increasing_id) // Se crea una columna con un id de los atomos
-  val mm = c_at_f.orderBy(asc("Name")).withColumn("AtomID", monotonically_increasing_id)
+  // Se añade columna con el id de los atomos
+  val c_at_f = c_at_3.orderBy(asc("Name")).withColumn("AtomID", monotonically_increasing_id)
 
   // Se añade la columna con las distancias
-  // Contruct the map for the transpose the coordinates
-  val t_df = new transformations_df
-  val l_atoms = coord_id.select("Atom").collect().map(_(0).toString).toList
-  val mm1 = t_at_nam.map(1 to _._2)
-  val mm2 = mm1.map(y => y.sliding(3).toList.map(_.map(x => (x-1)%3)))
-  val seq_atom = (0 until t_at_nam.map(_._2).sum).toList.map(_.toString)
-  val M_inic = Map( "AtomID" -> "Coord")
-  val M_atom = (seq_atom zip l_atoms).toMap
-  val M_final = M_inic ++ M_atom
-  val trans_DF = t_df.TransposeDF(coord_id, Seq("X", "Y", "Z"), "AtomID")
-  val newNames = t_df.mapFields(trans_DF, M_final)
+  val inic_coord = c_at_f.select(col("AtomID") as "AtomID_inic",
+    col("X") as "X_inic",
+    col("Y") as "Y_inic",
+    col("Z") as "Z_inic",
+  )
+  val fin_coord = c_at_f.select(col("AtomID") as "AtomID_fin",
+    col("X") as "X_fin",
+    col("Y") as "Y_fin",
+    col("Z") as "Z_fin",
+  )
+  val dist_m = inic_coord.join(fin_coord, col("AtomID_inic") =!= col("AtomID_fin"))
+  val dist_m1 = dist_m.withColumn("At1->At2", concat(col("AtomID_inic"), lit("->"), col("AtomID_fin")))
+    .withColumn("Distances", f_mol.eucDistance(col("X_inic"),col("Y_inic"),col("Z_inic"),col("X_fin"),col("Y_fin"),col("Z_fin")))
+  val dist_m2 = dist_m1.withColumn("m", map(col("At1->At2"),col("Distances")))
+
+  //val mergeExpr = expr("aggregate(Distances, map(), (acc, i) -> map_concat(acc, i))")
+  //val dist_m3 = dist_m2.groupBy("AtomID_inic").agg(collect_list("Distances").as("Distances"))
+  //  .select($"AtomID_inic", mergeExpr.as("merged_Distances"))
 
   // Se añade la masa y el centro de masas al dataframe de la molecula
   private val df_s_mass = c_at_f.groupBy(Par.c_name).agg(sum(Par.c_m_at).alias("T_Mass"))
