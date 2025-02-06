@@ -1,8 +1,0 @@
-molecule {
-  "name" : "C4",
-  "method" : "HF",
-  "basis set" : "STO-3G",
-  "charge" : 0,
-  "multiplicity" : 1,
-  "num atom" : 18
-}

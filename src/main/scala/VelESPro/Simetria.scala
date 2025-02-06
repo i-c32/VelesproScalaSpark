@@ -1,6 +1,8 @@
 package VelESPro
 
-import scala.math._
+import Parameters.Par
+import org.apache.spark.sql.DataFrame
+import org.apache.spark.sql.functions._
 
 //class SEA(mol: Molecule) {
 
@@ -24,26 +26,25 @@ import scala.math._
 
 //}
 
-//class Simetria(mol: Molecule, n_at:Int) {
+class Simetria(mol: DataFrame) {
 
-//  def mat_iner(mol: Molecule, n_at: Int): Array[Array[Double]] = {
-//    var m_inercia = Array.ofDim[Double](3,3)
-//    for (i <- 0 until n_at) {
-//      m_inercia(0)(0) +=  mol.mass(i) * (pow(mol.coord_at(i)(1)-mol.c_mas(1),2) + pow(mol.coord_at(i)(2)-mol.c_mas(2),2))
-//      m_inercia(1)(1) +=  mol.mass(i) * (pow(mol.coord_at(i)(0)-mol.c_mas(0),2) + pow(mol.coord_at(i)(2)-mol.c_mas(2),2))
-//      m_inercia(2)(2) +=  mol.mass(i) * (pow(mol.coord_at(i)(0)-mol.c_mas(0),2) + pow(mol.coord_at(i)(1)-mol.c_mas(1),2))
-//      m_inercia(0)(1) -=  mol.mass(i) * (mol.coord_at(i)(0)-mol.c_mas(0)) * (mol.coord_at(i)(1)-mol.c_mas(1))
-//      m_inercia(0)(2) -=  mol.mass(i) * (mol.coord_at(i)(0)-mol.c_mas(0)) * (mol.coord_at(i)(2)-mol.c_mas(2))
-//      m_inercia(1)(2) -=  mol.mass(i) * (mol.coord_at(i)(1)-mol.c_mas(1)) * (mol.coord_at(i)(2)-mol.c_mas(2))
-//    }
-//    m_inercia(1)(0)=m_inercia(0)(1)
-//    m_inercia(2)(0)=m_inercia(0)(2)
-//    m_inercia(2)(1)=m_inercia(1)(2)
-//
-//    return m_inercia
-//  }
-//
-//  val in_m: Array[Array[Double]] = mat_iner(mol, n_at) // matriz de inercia
-//
-//  val sea = new SEA(mol)
-//}
+  def mat_iner(mol: DataFrame): DataFrame = {
+
+    val m_inercia = mol.withColumn("0_0", col("Mass")*(pow(col("Y"),2)+pow(col("Z"),2)))
+      .withColumn("1_1", col("Mass")*(pow(col("X"),2)+pow(col("Z"),2)))
+      .withColumn("2_2", col("Mass")*(pow(col("X"),2)+pow(col("Y"),2)))
+      .withColumn("0_1", col("Mass")*col("X")*col("Y"))
+      .withColumn("0_2", col("Mass")*col("X")*col("Z"))
+      .withColumn("1_2", col("Mass")*col("Y")*col("Z"))
+
+    val m_inercia_f = m_inercia.groupBy(Par.c_name).
+      agg(sum("0_0").alias("0"), sum("0_1").alias("1"), sum("0_2").alias("2"),
+        sum("0_1").alias("3"), sum("1_1").alias("4"), sum("1_2").alias("5"),
+        sum("0_2").alias("6"), sum("1_2").alias("7"), sum("2_2").alias("8"))
+
+    m_inercia_f
+  }
+
+  val n = mat_iner(mol)
+
+}
