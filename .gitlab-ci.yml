@@ -1,0 +1,31 @@
+# This file is a template, and might need editing before it works on your project.
+# You can copy and paste this template into a new `.gitlab-ci.yml` file.
+# You should not add this template to an existing `.gitlab-ci.yml` file by using the `include:` keyword.
+#
+# To contribute improvements to CI/CD templates, please follow the Development guide at:
+# https://docs.gitlab.com/ee/development/cicd/templates.html
+# This specific template is located at:
+# https://gitlab.com/gitlab-org/gitlab/-/blob/master/lib/gitlab/ci/templates/Scala.gitlab-ci.yml
+
+# Official OpenJDK Java image. Look for the different tagged releases at
+# https://hub.docker.com/_/openjdk/ . A Java image is not required
+# but an image with a JVM speeds up the build a bit.
+image: maven:3.8.6-openjdk-8
+
+before_script:
+  # Enable the usage of sources over https
+  - apt-get update -yqq
+  - apt-get install apt-transport-https -yqq
+  # Install SBT
+  - apt-get update -yqq
+  - apt-get install git -yqq
+
+test:
+  script:
+    # Execute your project's tests
+    - mvn clean test
+    
+deploy:
+  stage: deploy
+  script: echo "Define your deployment script!"
+  environment: production
