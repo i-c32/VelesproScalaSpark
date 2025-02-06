@@ -26,7 +26,7 @@ object App {
     // Se lee la molecula y se guardan los datos en un dataframe
     val r_mol = new Molecule(in_op_f)
 
-//    //val sim = new Simetria(mol, r_mol.n_at)
+    val sim = new Simetria(r_mol.c_at_f)
 
     // Se añade el timpo de entrada
     val mol_f1 = r_mol.mol_f.withColumn(Par.c_time, lit(currentDateTime))

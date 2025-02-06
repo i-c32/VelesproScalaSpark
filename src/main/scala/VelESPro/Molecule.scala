@@ -65,17 +65,17 @@ class Molecule(in_op_f : String) {
   }
 
   // Se añade columna con el id de los atomos
-  val c_at_f: DataFrame = c_at_3.orderBy(asc("Name")).withColumn("AtomID", monotonically_increasing_id)
+  private val c_at_4 = c_at_3.orderBy(asc("Name")).withColumn("AtomID", monotonically_increasing_id)
 
   // Se añade la columna con las distancias
-  private val inic_coord = c_at_f.select(col("AtomID") as "AtomID",
+  private val inic_coord = c_at_4.select(col("AtomID") as "AtomID",
     col("X") as "X_inic",
     col("Y") as "Y_inic",
     col("Z") as "Z_inic",
     col("Num_at") as "Num_at_inic",
     col("Name") as "Name_inic"
   )
-  private val fin_coord = c_at_f.select(col("AtomID") as "AtomID_fin",
+  private val fin_coord = c_at_4.select(col("AtomID") as "AtomID_fin",
     col("X") as "X_fin",
     col("Y") as "Y_fin",
     col("Z") as "Z_fin",
@@ -86,6 +86,10 @@ class Molecule(in_op_f : String) {
   private val dist_m1 = dist_m.withColumn("At1->At2", concat(col("AtomID"), lit("_"), col("AtomID_fin")))
     .withColumn("Distances", f_mol.eucDistance(col("X_inic"),col("Y_inic"),col("Z_inic"),col("X_fin"),col("Y_fin"),col("Z_fin")))
   private val dist_mm = dist_m1.drop("Name_fin").drop("X_inic").drop("Y_inic").drop("Z_inic").drop("X_fin").drop("Y_fin").drop("Z_fin").withColumnRenamed("Name_inic",Par.c_name)
+  // dataframe de la matriz de distancias
+  private val df_m_dist = dist_mm.groupBy("AtomID","Name").pivot("AtomID_fin").agg(sum("Distances")).orderBy("AtomID")
+  private val df_m_dist1 = df_m_dist.withColumn("Dist_at",array(col("0"),col("1"),col("2"))).select("AtomID", "Dist_at")
+  val c_at_f: DataFrame = c_at_4.join(df_m_dist1,Seq("AtomID"))
 
   // Se añade la masa y el centro de masas al dataframe de la molecula
   private val df_s_mass = c_at_f.groupBy(Par.c_name).agg(sum(Par.c_m_at).alias("T_Mass"))
