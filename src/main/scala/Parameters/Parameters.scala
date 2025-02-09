@@ -36,9 +36,7 @@ object Par {
   //basis set path
   val ruta_basis: String = "resources/Basis_set/"
   //Archivos de entrada y salida
-  val ruta = "resources/Input/"
-  val ruta1 = "HF/resources/Output/"
-  val in_op_f: String = ruta + "input1.vel"
-  val output_f: String = ruta1 + "output1.parquet"
+  val ruta = "resources/Output/"
+  val output_f: String = ruta + "output1.parquet"
 }
 

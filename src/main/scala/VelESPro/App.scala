@@ -20,6 +20,17 @@ object App {
 
   def main(args : Array[String]): Unit = {
 
+    // Declare the variable before the if-else block to ensure it's in scope
+    var in_op_f: String = ""
+
+    // Se lee el nombre del fichero de entrada.
+    if (args.length < 1) {
+      println("Please provide the input argument.")
+      System.exit(1) // Exit if argument is missing
+    } else {
+      in_op_f = args(0) // First argument
+    }
+
     // Tiempo de inicio
     val currentDateTime: LocalDateTime = LocalDateTime.now()
 

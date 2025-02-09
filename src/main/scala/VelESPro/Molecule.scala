@@ -88,7 +88,8 @@ class Molecule(in_op_f : String) {
   private val dist_mm = dist_m1.drop("Name_fin").drop("X_inic").drop("Y_inic").drop("Z_inic").drop("X_fin").drop("Y_fin").drop("Z_fin").withColumnRenamed("Name_inic",Par.c_name)
   // dataframe de la matriz de distancias
   private val df_m_dist = dist_mm.groupBy("AtomID","Name").pivot("AtomID_fin").agg(sum("Distances")).orderBy("AtomID")
-  private val df_m_dist1 = df_m_dist.withColumn("Dist_at",array(col("0"),col("1"),col("2"))).select("AtomID", "Dist_at")
+  private val name_cols = df_m_dist.drop("AtomID", "Dist_at", "Name").columns
+  private val df_m_dist1 = df_m_dist.withColumn("Dist_at",array(name_cols.map(col): _*)).select("AtomID", "Dist_at")
   val c_at_f: DataFrame = c_at_4.join(df_m_dist1,Seq("AtomID"))
 
   // Se añade la masa y el centro de masas al dataframe de la molecula
