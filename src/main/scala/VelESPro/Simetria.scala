@@ -3,6 +3,7 @@ package VelESPro
 import Parameters.Par
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions._
+import org.apache.spark.mllib.linalg.DenseMatrix
 
 class Simetria(mol: DataFrame) {
 
@@ -19,6 +20,15 @@ class Simetria(mol: DataFrame) {
       agg(sum("0_0").alias("0"), sum("0_1").alias("1"), sum("0_2").alias("2"),
         sum("0_1").alias("3"), sum("1_1").alias("4"), sum("1_2").alias("5"),
         sum("0_2").alias("6"), sum("1_2").alias("7"), sum("2_2").alias("8"))
+
+    // Matriz de inercia
+    val dm_iner = new DenseMatrix(3, 3, m_inercia_f.drop("Name").head.toSeq.map(_.asInstanceOf[Double]).toArray)
+
+    //Creacion de la Matriz identidad
+    val size = 3
+    val indentM = Array.tabulate(size*size)(i => if (i % size == 0) 1.0 else 0.0)
+
+    val dm_i = new DenseMatrix(3, 3, indentM)
 
     m_inercia_f
   }
