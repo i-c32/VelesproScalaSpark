@@ -1,9 +1,11 @@
 package VelESPro
 
 import Parameters.Par
+import VelESPro.App.spark
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions._
 import org.apache.spark.mllib.linalg.DenseMatrix
+import spark.implicits._
 
 class Simetria(mol: DataFrame) {
 
@@ -54,7 +56,33 @@ class Simetria(mol: DataFrame) {
 
     val val_ang2 = val_ang1.groupBy(col("Name")).pivot(col("nam")).agg(first("Value"))
     // Se tiene que hacer 1/2*atan(2*Aij/(Aii-Ajj))
-    val val_ang3 = val_ang2
+    val val_ang3 = val_ang2.withColumn("theta", atan((col("Aij") * 2) / (col("Aii") * col("Ajj")))/2)
+      .withColumn("cos(t)", cos(col("theta")))
+      .withColumn("sin(t)", sin(col("theta")))
+
+    // Get the Row and Column values from a specific row (e.g., the first row)
+    val ct = val_ang3.select("cos(t)").first()(0).asInstanceOf[Double]
+    val st = val_ang3.select("sin(t)").first()(0).asInstanceOf[Double]
+
+    //Define matrix size
+    val n = 3 // Change to desired size
+    //Se tiene que transformar en integer
+    val rowVI = rowValue.toString.toInt
+    val colVI = colValue.toString.toInt
+    // Generate Identity Matrix as a flattened list
+    val identityMatrixValues = Array.tabulate(n, n) { (i, j) =>
+      if (i == rowVI && j == rowVI) ct
+      else if (i == colVI && j == colVI) ct
+      else if (i == rowVI && j == colVI) st
+      else if (i == colVI && j == rowVI) -st
+      else if (i == j) 1.1
+      else 0.0
+    }.flatten
+    // Convert values into a DataFrame
+    val identityDF = identityMatrixValues.zipWithIndex.toSeq.toDF("DiagM", "index")
+
+    val m_inercia_3 = m_inercia_2.filter(col("Name") === "C2").withColumn("index",monotonically_increasing_id())
+    val m_inercia_4 = m_inercia_3.join(identityDF, Seq("index"))
 
     // Matriz de inercia
     val dm_iner = new DenseMatrix(3, 3, m_inercia_1.drop("Name").collect()(1).toSeq.map(_.asInstanceOf[Double]).toArray)
