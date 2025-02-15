@@ -21,7 +21,6 @@ before_script:
   - apt-get update -yqq
   - apt-get install apt-transport-https -yqq
   # Install SBT
-  - apt-get update -yqq
   - apt-get install git -yqq
 
 variables:
@@ -32,7 +31,7 @@ variables:
 stages:
   - build
   - test
-  - publish
+  - deploy
 
 build:
   stage: build
@@ -44,12 +43,12 @@ test:
   script:
     - mvn $MAVEN_CLI_OPTS test
 
-publish:
-  stage: publish
+deploy:
+  stage: deploy
   script:
     - mvn $MAVEN_CLI_OPTS deploy
   rules:
-    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_COMMIT_BRANCH == "master"
 
 # For SonarQube
 sonarcloud-check:
