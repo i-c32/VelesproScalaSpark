@@ -11,7 +11,7 @@
 # https://hub.docker.com/_/openjdk/ . A Java image is not required
 # but an image with a JVM speeds up the build a bit.
 default:
-  image: maven:3-openjdk-11
+  image: maven:3-openjdk-8
   cache:
     paths:
       - target/
@@ -25,7 +25,6 @@ before_script:
 
 variables:
   MAVEN_CLI_OPTS: "--batch-mode"
-  SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"  # Defines the location of the analysis task cache
   GIT_DEPTH: "0"  # Tells git to fetch all the branches of the project, required by the analysis task
 
 stages:
@@ -52,12 +51,14 @@ deploy:
 
 # For SonarQube
 sonarcloud-check:
-  image: maven:3-openjdk-11
+  image: maven:3-openjdk-8
+  variables:
+    SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"  # Defines the location of the analysis task cache
   cache:
     key: "${CI_JOB_NAME}"
     paths:
       - .sonar/cache
   script:
-    - mvn verify sonar:sonar -Dsonar.projectKey=Noilix_HF
-  only:
-    - master
+    - mvn verify sonar:sonar -Dsonar.projectKey=Noilix_HF -Dsonar.qualitygate.wait=true
+  rules:
+    - if $CI_COMMIT_REF_NAME == 'master' || $CI_PIPELINE_SOURCE == "merge_request_event"
