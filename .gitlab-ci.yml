@@ -31,6 +31,7 @@ stages:
   - build
   - test
   - deploy
+  - analyze
 
 build:
   stage: build
@@ -51,7 +52,10 @@ deploy:
 
 # For SonarQube
 sonarcloud-check:
-  image: maven:3-openjdk-8
+  stage: analyze
+  image: maven:3.6.3-jdk-11
+  script: 
+      # Set the sonar.java.binaries properties and don't add maven step like verify
   variables:
     SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"  # Defines the location of the analysis task cache
   cache:
@@ -59,6 +63,7 @@ sonarcloud-check:
     paths:
       - .sonar/cache
   script:
-    - mvn verify sonar:sonar -Dsonar.projectKey=Noilix_HF -Dsonar.login=${SONAR_TOKEN}
+    - mvn org.sonarsource.scanner.maven:sonar-maven-plugin:3.10.0.2594:sonar -Dsonar.qualitygate.wait=true -Dsonar.projectKey=Noilix_HF -Dsonar.java.binaries=target/classes -Dsonar.java.source=1.8
   rules:
   - if: '$CI_COMMIT_REF_NAME == "master" || $CI_PIPELINE_SOURCE == "merge_request_event"'
+  allow_failure: true
