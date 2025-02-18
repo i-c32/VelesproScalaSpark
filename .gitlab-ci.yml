@@ -59,6 +59,6 @@ sonarcloud-check:
     paths:
       - .sonar/cache
   script:
-    - mvn verify sonar:sonar -Dsonar.projectKey=Noilix_HF
+    - mvn verify sonar:sonar -Dsonar.projectKey=Noilix_HF -Dsonar.login=${SONAR_TOKEN}
   rules:
-    - if $CI_COMMIT_REF_NAME == 'master' || $CI_PIPELINE_SOURCE == "merge_request_event"
+  - if: '$CI_COMMIT_REF_NAME == "master" || $CI_PIPELINE_SOURCE == "merge_request_event"'
