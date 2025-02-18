@@ -27,14 +27,19 @@
     <scalatest.version>3.2.18</scalatest.version>
     <scala.compat.version>2.12</scala.compat.version>
     <spec2.version>4.2.0</spec2.version>
-    <spark_mllib.version>3.5.1</spark_mllib.version>
+    <spark_mllib.version>3.5.4</spark_mllib.version>
     <junit.version>4.13.1</junit.version>
-    <spark.version>3.5.1</spark.version>
+    <spark.version>3.5.4</spark.version>
     <slf4j.version>2.0.13</slf4j.version>
     <log4j.version>2.23.1</log4j.version>
     <jackson_core.version>2.17.2</jackson_core.version>
     <typesafe.version>1.4.3</typesafe.version>
   </properties>
+
+  <scm>
+    <developerConnection>scm:git:git@gitlab.com:Noilix/HF.git</developerConnection>
+    <tag>HEAD</tag>
+  </scm>
 
   <dependencies>
     <dependency>
@@ -123,8 +128,18 @@
       <artifactId>scalactic_${scala.compat.version}</artifactId>
       <version>${scalatest.version}</version>
     </dependency>
-
   </dependencies>
+
+  <distributionManagement>
+    <repository>
+      <id>gitlab-maven</id>
+      <url>https://gitlab.com/api/v4/projects/751071/packages/maven</url>
+    </repository>
+    <snapshotRepository>
+      <id>gitlab-maven</id>
+      <url>https://gitlab.com/api/v4/projects/751071/packages/maven</url>
+    </snapshotRepository>
+  </distributionManagement>
 
   <build>
     <sourceDirectory>src/main/scala</sourceDirectory>
@@ -156,8 +171,15 @@
         <version>2.21.0</version>
         <configuration>
           <!-- Tests will be run with scalatest-maven-plugin instead -->
+          <argLine>--illegal-access=permit</argLine>
           <skipTests>true</skipTests>
         </configuration>
+      </plugin>
+      <!-- For deploy command-->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-release-plugin</artifactId>
+        <version>2.5.1</version>
       </plugin>
       <plugin>
         <groupId>org.scalatest</groupId>
@@ -171,6 +193,12 @@
             </goals>
           </execution>
         </executions>
+      </plugin>
+      <!-- Sonar plugin-->
+      <plugin>
+        <groupId>org.sonarsource.scanner.maven</groupId>
+        <artifactId>sonar-maven-plugin</artifactId>
+        <version>4.0.0.4121</version>
       </plugin>
     </plugins>
   </build>
