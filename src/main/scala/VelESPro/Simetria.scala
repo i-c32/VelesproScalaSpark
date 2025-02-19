@@ -7,6 +7,8 @@ import org.apache.spark.sql.functions._
 import org.apache.spark.mllib.linalg.DenseMatrix
 import spark.implicits._
 
+import scala.collection.mutable.ListBuffer
+
 class Simetria(mol: DataFrame) {
 
   def mat_iner(mol: DataFrame): DataFrame = {
@@ -84,8 +86,27 @@ class Simetria(mol: DataFrame) {
     val m_inercia_3 = m_inercia_2.filter(col("Name") === "C2").withColumn("index",monotonically_increasing_id())
     val m_inercia_4 = m_inercia_3.join(identityDF, Seq("index"))
 
+    val n_at = mol.where(col("Name")==="C2").count().toInt
+    val n_at_l = (0 until n_at).toList
+
+    var ColL: DataFrame = spark.emptyDataFrame
+    var RowL: DataFrame = spark.emptyDataFrame
+    val mutableList = ListBuffer[Double]()
+
+    for (row <- n_at_l) {
+      for (coll <- n_at_l) {
+        RowL = m_inercia_4.orderBy("Column").where(col("Row") === coll).select(col("Value").alias("VR")).withColumn("index",monotonically_increasing_id())
+        ColL = m_inercia_4.orderBy("Row").where(col("Column") === row).select(col("Value").alias("VC")).withColumn("index",monotonically_increasing_id())
+
+        mutableList += RowL.join(ColL, Seq("index")).withColumn("mult", col("VC")*col("VR")).agg(sum("mult")).first()(0).asInstanceOf[Double]
+      }
+    }
+
+    val arr = mutableList.toDF("Mult1").withColumn("index",monotonically_increasing_id())
+
     // Matriz de inercia
-    val dm_iner = new DenseMatrix(3, 3, m_inercia_1.drop("Name").collect()(1).toSeq.map(_.asInstanceOf[Double]).toArray)
+
+      val dm_iner = new DenseMatrix(3, 3, m_inercia_1.drop("Name").collect()(1).toSeq.map(_.asInstanceOf[Double]).toArray)
 
     // Obtener el valor maximo fuera de la diagonal
     // Create a collection of all off-diagonal elements along with their indices
