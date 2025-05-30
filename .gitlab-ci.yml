@@ -17,8 +17,6 @@ before_script:
   # Enable the usage of sources over https
   - apt-get update
   - apt-get install -yqq apt-transport-https
-  # Install SBT
-  - apt-get install -yqq git
 
 variables:
   MAVEN_CLI_OPTS: "--batch-mode"
@@ -66,6 +64,7 @@ sonarcloud-check:
 deploy:
   stage: deploy
   script:
-    - mvn $MAVEN_CLI_OPTS deploy
+    - echo "<settings><servers><server><id>gitlab-maven</id><username>gitlab+deploy-token-8242047</username><password>${CI_JOB_TOKEN}</password></server></servers></settings>" > settings.xml
+    - mvn $MAVEN_CLI_OPTS deploy --settings settings.xml
   rules:
     - if: $CI_COMMIT_BRANCH == "master"
