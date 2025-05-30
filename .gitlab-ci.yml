@@ -11,7 +11,7 @@
 # https://hub.docker.com/_/openjdk/ . A Java image is not required
 # but an image with a JVM speeds up the build a bit.
 default:
-  image: maven:3-openjdk-8
+  image: maven:3-openjdk-17
   cache:
     paths:
       - target/
@@ -30,8 +30,8 @@ variables:
 stages:
   - build
   - test
-  - deploy
   - analyze
+  - deploy
 
 build:
   stage: build
@@ -61,7 +61,7 @@ sonarcloud-check:
     paths:
       - .sonar/cache
   script:
-    - mvn org.sonarsource.scanner.maven:sonar-maven-plugin:3.10.0.2594:sonar -Dsonar.qualitygate.wait=true -Dsonar.projectKey=Noilix_HF -Dsonar.java.binaries=target/classes -Dsonar.java.source=1.8
+    - mvn verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=Noilix_HF -Dsonar.scala.coverage.reportPaths=target/scoverage.xml
   rules:
   - if: '$CI_COMMIT_REF_NAME == "master" || $CI_PIPELINE_SOURCE == "merge_request_event"'
   allow_failure: true
