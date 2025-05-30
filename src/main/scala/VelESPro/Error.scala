@@ -10,41 +10,41 @@ import scala.sys.exit
 
 class Error {
 
-  def diff_n_molec(n_at_mole: Int, c_ini: Int): Unit = {
-    if (n_at_mole > c_ini) {
+  def diffNMolec(nAtMole: Int, cIni: Int): Unit = {
+    if (nAtMole > cIni) {
       Console.err.println("Number of atoms in config file is > number of atoms in coord file")
       exit(1)
     }
-    else if (n_at_mole < c_ini) {
+    else if (nAtMole < cIni) {
       Console.err.println("Number of atoms in config file is < number of atoms in coord file")
       exit(1)
     }
   }
 
-  def check_file(filename:String): String = {
+  def checkFile(filename:String): String = {
     try {
       val ff= scala.io.Source.fromFile(filename)
-      val st_f = ff.mkString
+      val stF = ff.mkString
       ff.close()
-      st_f
+      stF
     } catch {
-      case e: FileNotFoundException =>
+      case _: FileNotFoundException =>
         Console.err.println("ERROR_1001: The config file do not exist, or it is not found in this folder.")
         exit(1)
-      case e: IOException =>
+      case _: IOException =>
         Console.err.println("Had an IOException trying to read that file")
         exit(1)
     }
   }
 
-  def readc_conf_file(filename:String): Either[String,DataFrame] = {
+  def readcConfFile(filename:String): Either[String,DataFrame] = {
     val fs = FileSystem.get(spark.sparkContext.hadoopConfiguration)
-    val fileExists = fs.exists(new Path(Par.ruta_basis + filename))
+    val fileExists = fs.exists(new Path(Par.rutaBasis + filename))
     if (fileExists) {
-      val m_line = true
-      Right(spark.read.option("multiLine", m_line).json(Par.ruta_basis + filename))
+      val mLine = true
+      Right(spark.read.option("multiLine", mLine).json(Par.rutaBasis + filename))
     } else {
-        Console.err.println("ERROR_1002: The basis "+Par.ruta_basis+filename+" do not exist, or it is not found in this folder.")
+        Console.err.println("ERROR_1002: The basis "+Par.rutaBasis+filename+" do not exist, or it is not found in this folder.")
         Left("ERROR_1002")
     }
   }
