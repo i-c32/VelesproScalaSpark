@@ -11,17 +11,18 @@
 # https://hub.docker.com/_/openjdk/ . A Java image is not required
 # but an image with a JVM speeds up the build a bit.
 default:
-  image: maven:3-openjdk-17
+  image: amazoncorretto:17
   cache:
     paths:
       - target/
 
 before_script:
   # Enable the usage of sources over https
-  - apt-get update -yqq
-  - apt-get install apt-transport-https -yqq
+  - apt-get update
+  - apt-get install -yqq maven
+  - apt-get install -yqq apt-transport-https
   # Install SBT
-  - apt-get install git -yqq
+  - apt-get install -yqq git
 
 variables:
   MAVEN_CLI_OPTS: "--batch-mode"
@@ -53,7 +54,6 @@ deploy:
 # For SonarQube
 sonarcloud-check:
   stage: analyze
-  image: maven:3-openjdk-17
   variables:
     SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"  # Defines the location of the analysis task cache
   cache:
