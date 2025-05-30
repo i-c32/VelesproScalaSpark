@@ -2,7 +2,7 @@ package VelESPro
 
 import com.typesafe.config.Config
 
-object Config_check {
+object ConfigCheck {
 
   implicit class RichConfig(val config: Config) extends AnyVal {
     def getOString(path: String): Option[String] = if (config.hasPath(path)) {

@@ -20,21 +20,31 @@
   </developers>
 
   <properties>
-    <maven.compiler.source>1.8</maven.compiler.source>
-    <maven.compiler.target>1.8</maven.compiler.target>
+    <maven.compiler.source>17</maven.compiler.source>
+    <maven.compiler.target>17</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <scala.version>2.12.20</scala.version>
-    <scalatest.version>3.2.18</scalatest.version>
-    <scala.compat.version>2.12</scala.compat.version>
+    <scala.version>2.13.16</scala.version>
+    <scalatest.version>3.2.19</scalatest.version>
+    <scala.compat.version>2.13</scala.compat.version>
     <spec2.version>4.2.0</spec2.version>
     <spark_mllib.version>3.5.4</spark_mllib.version>
     <junit.version>4.13.1</junit.version>
-    <spark.version>3.5.4</spark.version>
+    <spark.version>4.0.0</spark.version>
+    <scalac_scoverage.version>2.3.0</scalac_scoverage.version>
     <slf4j.version>2.0.13</slf4j.version>
     <log4j.version>2.23.1</log4j.version>
     <jackson_core.version>2.17.2</jackson_core.version>
     <typesafe.version>1.4.3</typesafe.version>
+    <!-- Sonar -->
+    <sonar.organization>noilix</sonar.organization>
+    <sonar.host.url>https://sonarcloud.io</sonar.host.url>
+    <sonar.scala.coverage>/target</sonar.scala.coverage>
   </properties>
+
+  <scm>
+    <developerConnection>scm:git:git@gitlab.com:Noilix/HF.git</developerConnection>
+    <tag>HEAD</tag>
+  </scm>
 
   <dependencies>
     <dependency>
@@ -68,12 +78,6 @@
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-reload4j</artifactId>
       <version>${slf4j.version}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>org.slf4j</groupId>
-          <artifactId>slf4j-reload4j</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
     <!-- https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-core -->
     <dependency>
@@ -129,8 +133,25 @@
       <artifactId>scalactic_${scala.compat.version}</artifactId>
       <version>${scalatest.version}</version>
     </dependency>
-
+    <!-- https://mvnrepository.com/artifact/org.scoverage/scalac-scoverage-plugin -->
+    <dependency>
+      <groupId>org.scoverage</groupId>
+      <artifactId>scalac-scoverage-plugin_${scala.version}</artifactId>
+      <version>${scalac_scoverage.version}</version>
+      <scope>provided</scope>
+    </dependency>
   </dependencies>
+
+  <distributionManagement>
+    <repository>
+      <id>gitlab-maven</id>
+      <url>https://gitlab.com/api/v4/projects/751071/packages/maven</url>
+    </repository>
+    <snapshotRepository>
+      <id>gitlab-maven</id>
+      <url>https://gitlab.com/api/v4/projects/751071/packages/maven</url>
+    </snapshotRepository>
+  </distributionManagement>
 
   <build>
     <sourceDirectory>src/main/scala</sourceDirectory>
@@ -140,7 +161,13 @@
         <!-- see http://davidb.github.com/scala-maven-plugin -->
         <groupId>net.alchim31.maven</groupId>
         <artifactId>scala-maven-plugin</artifactId>
-        <version>3.2.2</version>
+        <version>4.9.5</version>
+        <configuration>
+          <args>
+            <arg>-deprecation</arg>
+            <arg>-feature</arg>
+          </args>
+        </configuration>
         <executions>
           <execution>
             <goals>
@@ -159,12 +186,21 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
-        <version>2.21.0</version>
+        <version>3.5.3</version>
         <configuration>
-          <!-- Tests will be run with scalatest-maven-plugin instead -->
-          <argLine>--illegal-access=permit</argLine>
+          <!-- Avoid class org.apache.spark.storage.StorageUtils$ (in unnamed module @0x7414e3cb) cannot access class sun.nio.ch.DirectBuffer (in module java.base)
+          Tests will be run with scalatest-maven-plugin instead -->
+          <argLine>
+            --illegal-access=permit
+          </argLine>
           <skipTests>true</skipTests>
         </configuration>
+      </plugin>
+      <!-- For deploy command-->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-release-plugin</artifactId>
+        <version>2.5.1</version>
       </plugin>
       <plugin>
         <groupId>org.scalatest</groupId>
@@ -184,6 +220,17 @@
         <groupId>org.sonarsource.scanner.maven</groupId>
         <artifactId>sonar-maven-plugin</artifactId>
         <version>4.0.0.4121</version>
+      </plugin>
+      <plugin>
+        <groupId>org.scoverage</groupId>
+        <artifactId>scoverage-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>report</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>
