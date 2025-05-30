@@ -21,30 +21,30 @@ object App {
   def main(args : Array[String]): Unit = {
 
     // Declare the variable before the if-else block to ensure it's in scope
-    var in_op_f: String = ""
+    var inOpF: String = ""
 
     // Se lee el nombre del fichero de entrada.
     if (args.length < 1) {
       println("Please provide the input argument.")
       System.exit(1) // Exit if argument is missing
     } else {
-      in_op_f = args(0) // First argument
+      inOpF = args(0) // First argument
     }
 
     // Tiempo de inicio
     val currentDateTime: LocalDateTime = LocalDateTime.now()
 
     // Se lee la molecula y se guardan los datos en un dataframe
-    val r_mol = new Molecule(in_op_f)
+    val rMol = new Molecule(inOpF)
 
-    val sim = new Simetria(r_mol.c_at_f)
+    val sim = new Simetria(rMol.cAtF, rMol.molF)
 
-    // Se añade el timpo de entrada
-    val mol_f1 = r_mol.mol_f.withColumn(Par.c_time, lit(currentDateTime))
+    // Se añade el tiempo de entrada
+    val molF1 = sim.molF.withColumn(Par.cTime, lit(currentDateTime))
 
     //Se imprime los resultados como parquet
-    mol_f1.coalesce(1).write.mode("overwrite").parquet(output_f)
-    r_mol.c_at_f.coalesce(1).write.mode("append").parquet(output_f)
+    molF1.coalesce(1).write.mode("overwrite").parquet(outputF)
+    rMol.cAtF.write.mode("append").parquet(outputF)
 
     spark.stop()
   }

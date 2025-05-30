@@ -1,11 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ScalaCompilerConfiguration">
-    <profile name="Maven 1" modules="Scala_maven_test,Scala_maven_velespro">
+    <option name="deprecationWarnings" value="true" />
+    <option name="uncheckedWarnings" value="true" />
+    <option name="featureWarnings" value="true" />
+    <option name="explainTypeErrors" value="true" />
+    <option name="debuggingInfoLevel" value="Notailcalls" />
+    <profile name="Maven 1" modules="Scala_maven_test">
       <parameters>
         <parameter value="-dependencyfile" />
         <parameter value="$PROJECT_DIR$/target/.scala_dependencies" />
       </parameters>
+    </profile>
+    <profile name="Maven 2" modules="Scala_maven_velespro">
+      <option name="deprecationWarnings" value="true" />
+      <option name="featureWarnings" value="true" />
     </profile>
   </component>
 </project>

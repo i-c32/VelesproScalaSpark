@@ -17,8 +17,8 @@ class SimetriaTest extends AnyFlatSpec with Matchers{
       Array(0.0000000000000000, 0.0000000000000000, 8.3413813601903222))
 
     //obtain the meain squeare error of the matrix
-    val err = new errores()
-    //val M_errores = err.error_m(sim.in_m, in_mat)
+    val err = new Errores()
+    //val M_errores = err.errorM(sim.in_m, in_mat)
 
     //M_errores should be < err_test// Check the inertia matrix
 
