@@ -7,21 +7,16 @@
 # This specific template is located at:
 # https://gitlab.com/gitlab-org/gitlab/-/blob/master/lib/gitlab/ci/templates/Scala.gitlab-ci.yml
 
-# Official OpenJDK Java image. Look for the different tagged releases at
-# https://hub.docker.com/_/openjdk/ . A Java image is not required
-# but an image with a JVM speeds up the build a bit.
 default:
-  image: maven:3-openjdk-8
+  image: maven:3.9.9-eclipse-temurin-17
   cache:
     paths:
       - target/
 
 before_script:
   # Enable the usage of sources over https
-  - apt-get update -yqq
-  - apt-get install apt-transport-https -yqq
-  # Install SBT
-  - apt-get install git -yqq
+  - apt-get update
+  - apt-get install -yqq apt-transport-https
 
 variables:
   MAVEN_CLI_OPTS: "--batch-mode"
@@ -30,8 +25,8 @@ variables:
 stages:
   - build
   - test
-  - deploy
   - analyze
+  - deploy
 
 build:
   stage: build
@@ -41,27 +36,35 @@ build:
 test:
   stage: test
   script:
-    - mvn $MAVEN_CLI_OPTS test
+    - mvn $MAVEN_CLI_OPTS test scoverage:report
+  artifacts:
+    paths:
+      - target/scoverage.xml
+    expire_in: 1h
 
-deploy:
-  stage: deploy
-  script:
-    - mvn $MAVEN_CLI_OPTS deploy
-  rules:
-    - if: $CI_COMMIT_BRANCH == "master"
 
 # For SonarQube
 sonarcloud-check:
   stage: analyze
-  image: maven:3-openjdk-17
   variables:
     SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"  # Defines the location of the analysis task cache
   cache:
     key: "${CI_JOB_NAME}"
     paths:
       - .sonar/cache
+  dependencies:
+    - test
   script:
-    - mvn org.sonarsource.scanner.maven:sonar-maven-plugin:3.10.0.2594:sonar -Dsonar.qualitygate.wait=true -Dsonar.projectKey=Noilix_HF -Dsonar.java.binaries=target/classes -Dsonar.java.source=1.8
+    - ls -lh target/scoverage.xml || echo "Coverage file not found!"
+    - mvn verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=Noilix_HF -Dsonar.scala.coverage.reportPaths=target/scoverage.xml
   rules:
   - if: '$CI_COMMIT_REF_NAME == "master" || $CI_PIPELINE_SOURCE == "merge_request_event"'
   allow_failure: true
+
+deploy:
+  stage: deploy
+  script:
+    - echo "<settings><servers><server><id>gitlab-maven</id><username>gitlab+deploy-token-8242047</username><password>${CI_JOB_TOKEN}</password></server></servers></settings>" > settings.xml
+    - mvn $MAVEN_CLI_OPTS deploy --settings settings.xml
+  rules:
+    - if: $CI_COMMIT_BRANCH == "master"
