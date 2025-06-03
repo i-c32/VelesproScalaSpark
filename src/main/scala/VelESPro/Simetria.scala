@@ -56,7 +56,7 @@ class Simetria(mol: DataFrame, molec: DataFrame) {
 
     val matt1 = dfForName.withColumn("index", monotonically_increasing_id())
     val matt2 = matt1.join(identityDF, Seq("index"))
-    mtOp.diag(matt2).filter(col("Row")===col("Column")).select(col("Name"),col("Value")).groupBy("Name")
+    mtOp.diag(matt2, nMatTot).filter(col("Row")===col("Column")).select(col("Name"),col("Value")).groupBy("Name")
       .agg(collect_list("Value").alias("I_Tensor"))
   }
 

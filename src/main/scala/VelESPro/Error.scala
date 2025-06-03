@@ -7,45 +7,42 @@ import org.apache.spark.sql.DataFrame
 
 import java.io.{FileNotFoundException, IOException}
 import scala.sys.exit
+import scala.util.Using
 
 class Error {
 
   def diffNMolec(nAtMole: Int, cIni: Int): Unit = {
-    if (nAtMole > cIni) {
-      Console.err.println("Number of atoms in config file is > number of atoms in coord file")
-      exit(1)
-    }
-    else if (nAtMole < cIni) {
-      Console.err.println("Number of atoms in config file is < number of atoms in coord file")
-      exit(1)
+    if (nAtMole != cIni) {
+      val msg = if (nAtMole > cIni)
+        "Number of atoms in config file is > number of atoms in coord file"
+      else
+        "Number of atoms in config file is < number of atoms in coord file"
+
+      throw new IllegalArgumentException(msg)
     }
   }
 
-  def checkFile(filename:String): String = {
-    try {
-      val ff= scala.io.Source.fromFile(filename)
-      val stF = ff.mkString
-      ff.close()
-      stF
-    } catch {
+  def checkFile(filename: String): String = {
+    Using(scala.io.Source.fromFile(filename)) { source =>
+      source.mkString
+    }.recover {
       case _: FileNotFoundException =>
-        Console.err.println("ERROR_1001: The config file do not exist, or it is not found in this folder.")
-        exit(1)
-      case _: IOException =>
-        Console.err.println("Had an IOException trying to read that file")
-        exit(1)
-    }
+        throw new FileNotFoundException(
+          s"ERROR_1001: The config file '$filename' does not exist or was not found in the folder."
+        )
+    }.get
   }
 
   def readcConfFile(filename:String): Either[String,DataFrame] = {
+
+    val fullPath = Par.rutaBasis + filename
     val fs = FileSystem.get(spark.sparkContext.hadoopConfiguration)
-    val fileExists = fs.exists(new Path(Par.rutaBasis + filename))
-    if (fileExists) {
+
+    if (fs.exists(new Path(fullPath))) {
       val mLine = true
-      Right(spark.read.option("multiLine", mLine).json(Par.rutaBasis + filename))
+      Right(spark.read.option("multiLine", mLine).json(fullPath))
     } else {
-        Console.err.println("ERROR_1002: The basis "+Par.rutaBasis+filename+" do not exist, or it is not found in this folder.")
-        Left("ERROR_1002")
+        Left(s"ERROR_1002: The basis file '$fullPath' does not exist or is not found in this folder.")
     }
   }
 

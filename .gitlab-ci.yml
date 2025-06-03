@@ -26,7 +26,7 @@ stages:
   - build
   - test
   - analyze
-  - deploy
+#  - deploy
 
 build:
   stage: build
@@ -61,10 +61,10 @@ sonarcloud-check:
   - if: '$CI_COMMIT_REF_NAME == "master" || $CI_PIPELINE_SOURCE == "merge_request_event"'
   allow_failure: true
 
-deploy:
-  stage: deploy
-  script:
-    - echo "<settings><servers><server><id>gitlab-maven</id><username>gitlab+deploy-token-8242047</username><password>${CI_JOB_TOKEN}</password></server></servers></settings>" > settings.xml
-    - mvn $MAVEN_CLI_OPTS deploy --settings settings.xml
-  rules:
-    - if: $CI_COMMIT_BRANCH == "master"
+#deploy:
+#  stage: deploy
+#  script:
+#    - echo "<settings><servers><server><id>gitlab-maven</id><username>gitlab+deploy-token-8242047</username><password>${CI_JOB_TOKEN}</password></server></servers></settings>" > settings.xml
+#    - mvn $MAVEN_CLI_OPTS deploy --settings settings.xml
+#  rules:
+#    - if: $CI_COMMIT_BRANCH == "master"
