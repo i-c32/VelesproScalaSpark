@@ -3,6 +3,7 @@ package VelESPro
 import Parameters.Par
 import VelESPro.App.spark
 import org.apache.spark.sql.DataFrame
+import org.apache.spark.sql.expressions.Window
 import org.apache.spark.sql.functions._
 import spark.implicits._
 
@@ -10,66 +11,50 @@ import scala.annotation.tailrec
 import scala.collection.mutable.ListBuffer
 
 class MOp {
-  def sumMatrix(A: Array[Array[Double]], B: Array[Array[Double]]): Array[Array[Double]] = {
-    val sumM: Array[Array[Double]] = Array.ofDim[Double](A.length, 3)
-    for (i <- A.indices) {
-      sumM(i) = A(i).zip(B(i)).map(x => x._1 + x._2)
-    }
-    sumM
-  }
-
-  def susMatrix(A: Array[Array[Double]], B: Array[Array[Double]]): Array[Array[Double]] = {
-    val susM: Array[Array[Double]] = Array.ofDim[Double](A.length, 3)
-    for (i <- A.indices) {
-      susM(i) = A(i).zip(B(i)).map(x => x._1 - x._2)
-    }
-    susM
-  }
 
   def compMatProd(df1: DataFrame,
                   df2: DataFrame,
                   nMatL: Seq[Int],
-                  nMatTot: Int
                  ): DataFrame = {
 
-    val results = ListBuffer.fill(nMatTot)(0.0)
-    var nn = 0
 
-    for (row <- nMatL; coll <- nMatL) {
+    val results = for {
+      (row, idx) <- nMatL.zipWithIndex
+      coll <- nMatL
+    } yield {
       val rowL = df1
         .filter(col("Row") === row)
         .orderBy("Column")
-        .select("V1")
-        .withColumn("index", monotonically_increasing_id())
+        .withColumn("index", row_number().over(Window.orderBy("Column")))
+        .select("V1","index")
 
       val colL = df2
         .filter(col("Column") === coll)
         .orderBy("Row")
-        .select("V2")
-        .withColumn("index", monotonically_increasing_id())
+        .withColumn("index", row_number().over(Window.orderBy("Row")))
+        .select("V2","index")
 
       val productSum = rowL
         .join(colL, Seq("index"))
         .withColumn("mult", col("V1") * col("V2"))
         .agg(sum("mult"))
-        .first()(0)
-        .asInstanceOf[Double]
+        .as[Double].first()
 
-      results(nn) = productSum
-      nn += 1
+      (productSum, idx * nMatL.size + nMatL.indexOf(coll))
     }
 
-    results.zipWithIndex.toSeq.toDF("Result", "index")
+
+
+    results.toDF("Result", "index")
   }
 
   @tailrec
-  final def diag(matt: DataFrame, iteration: Int = 0, maxIter: Int = 3): DataFrame = {
+  final def diag(matt: DataFrame, nMatTot: Int, iteration: Int = 0, maxIter: Int = 10): DataFrame = {
     if (iteration >= maxIter) {
       println(s"Reached maximum iterations ($maxIter). Returning last matrix.")
       return matt
     }
 
-    val nMatTot = matt.count().toInt
     val nMat = math.sqrt(nMatTot).toInt
 
     // elementos fuera de la diagonal de la matriz
@@ -82,11 +67,15 @@ class MOp {
       val cot = "cos(t)"
       val sit = "sin(t)"
       // Find the maximum value in the "Value" column
-      val maxRow = offDim0.agg(max("Value").as("Value"), min("Row").as("Row"), first("Column").as("Column"), first("Name").as("Name"))
+      val maxRow = offDim0.agg(max("Value").as("Value"),
+          min("Row").as("Row"),
+          first("Column").as("Column"),
+          first("Name").as("Name"))
+        .collect()(0)
 
       // Get the Row and Column values from the max value
-      val rowValue = maxRow.select("Row").first()(0)
-      val colValue = maxRow.select("Column").first()(0)
+      val rowValue = maxRow.getAs[String]("Row").toInt
+      val colValue = maxRow.getAs[String]("Column").toInt
 
       // Columnas para el valor del angulo
       val rowEqualsRow = col("Row") === rowValue && col("Column") === rowValue
@@ -109,11 +98,11 @@ class MOp {
         .withColumn("sqrt_t", lit(1.0) + col("beta") * col("beta"))
         .withColumn("t", sign(col("beta")) / (abs(col("beta")) + sqrt(col("sqrt_t"))))
         .withColumn(cot, lit(1.0) / sqrt(lit(1.0) + col("t") * col("t")))
-        .withColumn(sit, col(cot )* col("t"))
+        .withColumn(sit, col(cot )* col("t")).collect()(0)
 
       // Se obtiene el valor del coseno y del seno
-      val ct = valAng3.select(cot).first()(0).asInstanceOf[Double]
-      val st = valAng3.select(sit).first()(0).asInstanceOf[Double]
+      val ct = valAng3.getAs[Double](cot)
+      val st = valAng3.getAs[Double](sit)
 
       //Define matrix size
       //Se tiene que transformar en integer
@@ -146,8 +135,7 @@ class MOp {
       val dff1 = matt2.select(col("Row"),col("Column"),col("Value").alias("V1"))
       val dff2 = matt2.select(col("Row"),col("Column"),col("DiagM").alias("V2"))
       val dfMP = compMatProd(dff1, dff2,
-        nMatL: Seq[Int],
-        nMatTot: Int
+        nMatL: Seq[Int]
       )
       val matt3 = matt2.join(dfMP.withColumnRenamed("Result", "VDMT"), "index")
 
@@ -155,26 +143,13 @@ class MOp {
       val dff3 = matt3.select(col("Row").alias("Column"),col("Column").alias("Row"),col("DiagM").alias("V1"))
       val dff4 = matt3.select(col("Row"),col("Column"),col("VDMT").alias("V2"))
       val dfMP1 = compMatProd(dff3, dff4,
-        nMatL: Seq[Int],
-        nMatTot: Int
+        nMatL: Seq[Int]
       )
 
       val matt4 = matt3.join(dfMP1.withColumnRenamed("Result", "F"), "index")
 
       val matt5 = matt4.drop("VDMT","Value").withColumnRenamed("F","Value")
-      diag(matt5, iteration + 1, maxIter)
+      diag(matt5, nMatTot, iteration + 1, maxIter)
     }
-  }
-}
-
-class Errores {
-  // Calculo del error de una matriz
-  def errorM(A: Array[Array[Double]], B: Array[Array[Double]]): Double = {
-
-    val numEle = A.length*A(0).length// numero de elementos
-    val mOp = new MOp()
-    val MEr = mOp.susMatrix(A,B)
-    val MError = MEr.flatten.map(_.abs).sum/numEle
-    MError
   }
 }
