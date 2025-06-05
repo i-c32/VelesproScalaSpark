@@ -8,30 +8,30 @@ import org.apache.spark.sql.functions._
 import spark.implicits._
 
 import scala.annotation.tailrec
-import scala.collection.mutable.ListBuffer
+import org.apache.logging.log4j.{LogManager,Logger}
 
 class MOp {
+
+  val logger: Logger = LogManager.getLogger(this.getClass)
 
   def compMatProd(df1: DataFrame,
                   df2: DataFrame,
                   nMatL: Seq[Int],
                  ): DataFrame = {
 
-
+    logger.info("Start multiplication")
     val results = for {
       (row, idx) <- nMatL.zipWithIndex
       coll <- nMatL
     } yield {
       val rowL = df1
         .filter(col("Row") === row)
-        .orderBy("Column")
-        .withColumn("index", row_number().over(Window.orderBy("Column")))
+        .withColumn("index", row_number().over(Window.partitionBy("Row").orderBy("Column")))
         .select("V1","index")
 
       val colL = df2
         .filter(col("Column") === coll)
-        .orderBy("Row")
-        .withColumn("index", row_number().over(Window.orderBy("Row")))
+        .withColumn("index", row_number().over(Window.partitionBy("Column").orderBy("Row")))
         .select("V2","index")
 
       val productSum = rowL
@@ -42,8 +42,7 @@ class MOp {
 
       (productSum, idx * nMatL.size + nMatL.indexOf(coll))
     }
-
-
+    logger.info("End multiplication")
 
     results.toDF("Result", "index")
   }
