@@ -30,9 +30,11 @@ object App {
     val currentDateTime = LocalDateTime.now()
 
     // Se lee la molecula y se guardan los datos en dos dataframes
+    logger.info("Se crea la molecula con sus caracteristicas")
     val rMol = createMolecule(inOpF)
 
     // Se obtiene la simetria de la molecula
+    logger.info("Se obtiene la simetria de la molecula")
     val sim = createSimetria(rMol.cAtF, rMol.molF)
 
     val molF1 = sim.molF.withColumn(Par.cTime, lit(currentDateTime))

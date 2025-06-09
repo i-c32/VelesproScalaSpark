@@ -19,18 +19,16 @@ class FunctionsTest extends AnyWordSpec with Matchers {
         (0, 1, 2.0),
         (1, 0, 3.0),
         (1, 1, 4.0)
-      ).toDF("Row", "Column", "V1")
+      ).toDF("R1", "C1", "V1")
 
       val df2 = Seq(
         (0, 0, 5.0),
         (1, 0, 6.0),
         (0, 1, 7.0),
         (1, 1, 8.0)
-      ).toDF("Row", "Column", "V2")
+      ).toDF("R2", "C2", "V2")
 
-      val nMatL = Seq(0, 1)
-
-      val result = mtOp.compMatProd(df1, df2, nMatL).orderBy("index")
+      val result = mtOp.compMatProd(df1, df2).orderBy("index")
 
       val expected = Seq(
         (1.0 * 5.0 + 2.0 * 6.0), // dot for (0,0)

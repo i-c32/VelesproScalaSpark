@@ -3,7 +3,6 @@ package VelESPro
 import Parameters.Par
 import VelESPro.App.spark
 import org.apache.spark.sql.DataFrame
-import org.apache.spark.sql.expressions.Window
 import org.apache.spark.sql.functions._
 import spark.implicits._
 
@@ -16,35 +15,20 @@ class MOp {
 
   def compMatProd(df1: DataFrame,
                   df2: DataFrame,
-                  nMatL: Seq[Int],
                  ): DataFrame = {
 
     logger.info("Start multiplication")
-    val results = for {
-      (row, idx) <- nMatL.zipWithIndex
-      coll <- nMatL
-    } yield {
-      val rowL = df1
-        .filter(col("Row") === row)
-        .withColumn("index", row_number().over(Window.partitionBy("Row").orderBy("Column")))
-        .select("V1","index")
 
-      val colL = df2
-        .filter(col("Column") === coll)
-        .withColumn("index", row_number().over(Window.partitionBy("Column").orderBy("Row")))
-        .select("V2","index")
+    val result = df1.join(df2,$"C1" === $"R2").
+      withColumn("Product", $"V1"*$"V2").
+      groupBy($"R1",$"C2").
+      agg(sum("Product").as("Result")).
+      orderBy("R1","C2").
+      withColumn("index", monotonically_increasing_id())
 
-      val productSum = rowL
-        .join(colL, Seq("index"))
-        .withColumn("mult", col("V1") * col("V2"))
-        .agg(sum("mult"))
-        .as[Double].first()
-
-      (productSum, idx * nMatL.size + nMatL.indexOf(coll))
-    }
     logger.info("End multiplication")
+    result.select("Result", "index")
 
-    results.toDF("Result", "index")
   }
 
   @tailrec
@@ -129,21 +113,15 @@ class MOp {
       val matt1 = matt.drop("DiagM")
       val matt2 = matt1.join(identityDF, Seq("index"))
 
-      val nMatL = (0 until nMat).toList
-
-      val dff1 = matt2.select(col("Row"),col("Column"),col("Value").alias("V1"))
-      val dff2 = matt2.select(col("Row"),col("Column"),col("DiagM").alias("V2"))
-      val dfMP = compMatProd(dff1, dff2,
-        nMatL: Seq[Int]
-      )
+      val dff1 = matt2.select(col("Row").alias("R1"),col("Column").alias("C1"),col("Value").alias("V1"))
+      val dff2 = matt2.select(col("Row").alias("R2"),col("Column").alias("C2"),col("DiagM").alias("V2"))
+      val dfMP = compMatProd(dff1, dff2)
       val matt3 = matt2.join(dfMP.withColumnRenamed("Result", "VDMT"), "index")
 
       // Se intercambian filas y columnas para que sea la transpuesta
-      val dff3 = matt3.select(col("Row").alias("Column"),col("Column").alias("Row"),col("DiagM").alias("V1"))
-      val dff4 = matt3.select(col("Row"),col("Column"),col("VDMT").alias("V2"))
-      val dfMP1 = compMatProd(dff3, dff4,
-        nMatL: Seq[Int]
-      )
+      val dff3 = matt3.select(col("Row").alias("C1"),col("Column").alias("R1"),col("DiagM").alias("V1"))
+      val dff4 = matt3.select(col("Row").alias("R2"),col("Column").alias("C2"),col("VDMT").alias("V2"))
+      val dfMP1 = compMatProd(dff3, dff4)
 
       val matt4 = matt3.join(dfMP1.withColumnRenamed("Result", "F"), "index")
 
