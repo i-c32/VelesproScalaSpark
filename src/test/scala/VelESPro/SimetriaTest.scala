@@ -1,27 +1,42 @@
 package VelESPro
 
+import Parameters.Par
+import VelESPro.App.spark
+import org.apache.spark.sql.functions.{abs, col, expr}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should._
-import Parameters.Par._
 
 class SimetriaTest extends AnyFlatSpec with Matchers{
 
-  val input1 = "src/test/resources/Input/input1.vel"
-  val r_mol = new Molecule(input1)
-  //val sim = new Simetria(mol, r_mol.n_at)
+  import spark.implicits._
+
+  val readmol = spark.read
+    .option("header", Par.firstRowHeader)
+    .option("delimiter", Par.delimite)
+    .csv("src/test/resources/Input/simetry_coord.csv")
+  // Se eliminan los espacios vacios y se convierte el array en un double.
+  val testmol = readmol.toDF(readmol.columns.map(_.trim): _*).withColumn(
+    "Dist_at",
+    expr("transform(split(regexp_replace(Dist_at, '\\\\[|\\\\]', ''), ','), x -> cast(trim(x) as double))")
+  )
+
+  val testmolec = Seq(
+    ("H2O")
+  ).toDF("Name")
 
   "Simetria" should "obtain the inertia matrix" in {
     //val Eps = 1e-5
-    val in_mat= Array( Array(2.9322820011995119, 0.0000000000000000, 0.0000000000000000),
-      Array(0.0000000000000000, 5.4090993589908090, 0.0000000000000000),
-      Array(0.0000000000000000, 0.0000000000000000, 8.3413813601903222))
+    val sim = new Simetria(testmol,testmolec)
 
-    //obtain the meain squeare error of the matrix
+    val resultMol = sim.matIner(testmol).filter(col("Row") === col("Column"))
 
-    //val M_errores = err.errorM(sim.in_m, in_mat)
+    val expectedMol= Seq((0, 0, 2.9322820011995119),
+      (1, 1, 5.4090993589908090),
+      (2, 2, 8.3413813601903222)).toDF("Row","Column","Value_exp")
 
-    //M_errores should be < err_test// Check the inertia matrix
+    val joined = resultMol.join(expectedMol,Seq("Row"))
 
+    assert(joined.filter(abs($"Value" - $"Value_exp") > 1e-6).count() === 0)
   }
 
 }

@@ -1,11 +1,9 @@
 package VelESPro
 
-import Parameters.Par
 import org.apache.spark.sql.{Column, DataFrame, DataFrameWriter, Row}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.mockito.scalatest.MockitoSugar
-import org.mockito.ArgumentMatchersSugar._
 
 class AppRunnerTest extends AnyWordSpec with Matchers with MockitoSugar {
 

@@ -6,9 +6,6 @@ import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions._
 import spark.implicits._
 
-import scala.annotation.tailrec
-import scala.collection.mutable.ListBuffer
-
 class Simetria(mol: DataFrame, molec: DataFrame) {
 
   def matIner(mol: DataFrame): DataFrame = {
