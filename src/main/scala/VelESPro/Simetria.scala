@@ -53,8 +53,9 @@ class Simetria(mol: DataFrame, molec: DataFrame) {
 
     val matt1 = dfForName.withColumn("index", monotonically_increasing_id())
     val matt2 = matt1.join(identityDF, Seq("index"))
-    mtOp.diag(matt2, nMatTot).filter(col("Row")===col("Column")).select(col("Name"),col("Value")).groupBy("Name")
-      .agg(collect_list("Value").alias("I_Tensor"))
+    val matt3 = mtOp.diag(matt2, nMatTot).filter(col("Row")===col("Column")).withColumn("I_Tensor", lit(Par.convITencm1)/col("Value"))
+    matt3.select(col("Name"),col("I_Tensor")).groupBy("Name")
+      .agg(collect_list("I_Tensor"))
   }
 
   val InerTensor = results.reduceOption(_ union _).getOrElse(spark.emptyDataFrame)

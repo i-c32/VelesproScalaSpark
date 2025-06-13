@@ -34,7 +34,8 @@ object Par {
   val errDiag = 1E-10
   val errCompSEA = "array<decimal(25,7)>"
   val cBohr = 0.5291772086
-  val h = 6.62606957E-34
+  val convITenGHz = 1804.739829300774
+  val convITencm1 = 60.19964082287802
   //basis set path
   val rutaBasis: String = "resources/Basis_set/"
 }
