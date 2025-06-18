@@ -59,7 +59,26 @@ class Simetria(mol: DataFrame, molec: DataFrame) {
   }
 
   val InerTensor = results.reduceOption(_ union _).getOrElse(spark.emptyDataFrame)
-  val molF = molec.join(InerTensor,Seq("Name"))
+  val molF = molec.join(InerTensor,Seq("Name")).withColumnRenamed("collect_list(I_Tensor)","I_Tensor")
+
+  // Se centran las moleculas en el centro de masas
+  val molF1 = molF.select("Name","Center_mass")
+  val dfForName = molF1.select(col("Name"),posexplode(col("Center_mass")).as(Seq("index", "Center_mass")))
+
+  // Pivot on index to turn rows into columns
+  val pivoted = dfForName
+    .groupBy("Name")
+    .pivot("index")
+    .agg(first("Center_mass"))
+
+  val CM = pivoted.withColumnsRenamed(Map(
+    "0" -> "X1",
+    "1" -> "Y1",
+    "2" -> "Z1"
+  ))
+
+    val m1 = 1
+  }
 
   // SEA
   val distSort = mol.withColumn("Dist_at_s", array_sort(col("Dist_at")))
@@ -69,6 +88,8 @@ class Simetria(mol: DataFrame, molec: DataFrame) {
   val molSEA = distSort1.join(SEA,Seq("Dist_at_s"), "inner")
   val molSEA1 = molSEA.drop("Dist_at_s","C_AtomID")
 
+  val oS = new OperSimetria
+  val mm1 = oS.centroInversion(mol, names)
   val mm = 1
 
 }
