@@ -77,9 +77,6 @@ class Simetria(mol: DataFrame, molec: DataFrame) {
     "2" -> "Z1"
   ))
 
-    val m1 = 1
-  }
-
   // SEA
   val distSort = mol.withColumn("Dist_at_s", array_sort(col("Dist_at")))
   // Se pone el array decimal dependiendo de lo ajustado que queremos el resultado
@@ -89,7 +86,8 @@ class Simetria(mol: DataFrame, molec: DataFrame) {
   val molSEA1 = molSEA.drop("Dist_at_s","C_AtomID")
 
   val oS = new OperSimetria
-  val mm1 = oS.centroInversion(mol, names)
-  val mm = 1
+  val cInv = oS.centroInversion(mol, molF, names)
+
+  // Ahora se van a obtener los ejes C2
 
 }
