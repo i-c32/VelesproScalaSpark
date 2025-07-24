@@ -1,5 +1,8 @@
 molecule {
-  name = ["C2", "C2h", "C2v", "C3", "C3h", "C3v", "C4", "C4h", "C4v", "C5", "C5v", "C6", "C6h", "C6v"],
+  name = ["C2", "C2h", "C2v", "C3", "C3h", "C3v", "C4", "C4h", "C4v", "C5", "C5v", "C6", "C6h", "C6v", "C_infc",
+    "Ci", "Cs", "Cs_1", "D2", "D2d", "D2h", "D2h_1", "D2h_2", "D2h_3", "D2h_4", "D3", "D3d", "D3d_1", "D3h", "D4", "D4d",
+    "D4d_1", "D4d_2", "D4h", "D4h_1", "D4h_2", "D5", "D5d", "D5h", "D5h_1", "D5h_2", "D6", "D6h", "D6h_1", "D_infh",
+    "Ih", "Ih_1", "Ih_2", "O", "Oh", "Oh_1", "Oh_2", "Oh_3", "S4", "S6", "T", "Td"],
 
   C2 {
     coord = "C2_coord.vel"
@@ -11,7 +14,7 @@ molecule {
   }
 
   C2h {
-    coord = "C2h.vel"
+    coord = "C2h_coord.vel"
     method = "HF",
     basis set = "STO-3G",
     charge = 0,
@@ -142,7 +145,7 @@ molecule {
     basis set = "STO-3G",
     charge = 0,
     multiplicity = 1,
-    num atom = 13
+    num atom = 14
   }
 
   Cs {
@@ -151,7 +154,7 @@ molecule {
     basis set = "STO-3G",
     charge = 0,
     multiplicity = 1,
-    num atom = 13
+    num atom = 5
   }
 
   Cs_1 {
@@ -160,7 +163,7 @@ molecule {
     basis set = "STO-3G",
     charge = 0,
     multiplicity = 1,
-    num atom = 13
+    num atom = 3
   }
 
   D2 {
@@ -169,7 +172,7 @@ molecule {
     basis set = "STO-3G",
     charge = 0,
     multiplicity = 1,
-    num atom = 13
+    num atom = 76
   }
 
   D2d {
@@ -178,7 +181,7 @@ molecule {
     basis set = "STO-3G",
     charge = 0,
     multiplicity = 1,
-    num atom = 13
+    num atom = 7
   }
 
   D2h {
@@ -187,7 +190,7 @@ molecule {
     basis set = "STO-3G",
     charge = 0,
     multiplicity = 1,
-    num atom = 13
+    num atom = 6
   }
 
   D2h_1 {
@@ -196,7 +199,7 @@ molecule {
     basis set = "STO-3G",
     charge = 0,
     multiplicity = 1,
-    num atom = 13
+    num atom = 6
   }
 
   D2h_2 {
@@ -205,7 +208,7 @@ molecule {
     basis set = "STO-3G",
     charge = 0,
     multiplicity = 1,
-    num atom = 13
+    num atom = 12
   }
 
   D2h_3 {
@@ -214,7 +217,7 @@ molecule {
     basis set = "STO-3G",
     charge = 0,
     multiplicity = 1,
-    num atom = 13
+    num atom = 8
   }
 
   D2h_4 {
@@ -223,7 +226,7 @@ molecule {
     basis set = "STO-3G",
     charge = 0,
     multiplicity = 1,
-    num atom = 13
+    num atom = 18
   }
 
   D3 {
@@ -232,7 +235,7 @@ molecule {
     basis set = "STO-3G",
     charge = 0,
     multiplicity = 1,
-    num atom = 13
+    num atom = 50
   }
 
   D3d {
@@ -241,7 +244,7 @@ molecule {
     basis set = "STO-3G",
     charge = 0,
     multiplicity = 1,
-    num atom = 13
+    num atom = 8
   }
 
   D3d_1 {
@@ -250,6 +253,243 @@ molecule {
     basis set = "STO-3G",
     charge = 0,
     multiplicity = 1,
+    num atom = 18
+  }
+
+  D3h {
+    coord = "D3h_coord.vel"
+    method = "HF",
+    basis set = "STO-3G",
+    charge = 0,
+    multiplicity = 1,
+    num atom = 9
+  }
+
+  D4 {
+    coord = "D4_coord.vel"
+    method = "HF",
+    basis set = "STO-3G",
+    charge = 0,
+    multiplicity = 1,
+    num atom = 28
+  }
+
+  D4d {
+    coord = "D4d_coord.vel"
+    method = "HF",
+    basis set = "STO-3G",
+    charge = 0,
+    multiplicity = 1,
+    num atom = 8
+  }
+
+  D4d_1 {
+    coord = "D4d_1_coord.vel"
+    method = "HF",
+    basis set = "STO-3G",
+    charge = 0,
+    multiplicity = 1,
+    num atom = 10
+  }
+
+  D4d_2 {
+    coord = "D4d_2_coord.vel"
+    method = "HF",
+    basis set = "STO-3G",
+    charge = 0,
+    multiplicity = 1,
+    num atom = 17
+  }
+  D4h {
+    coord = "D4h_coord.vel"
+    method = "HF",
+    basis set = "STO-3G",
+    charge = 0,
+    multiplicity = 1,
+    num atom = 5
+  }
+  D4h_1 {
+    coord = "D4h_1_coord.vel"
+    method = "HF",
+    basis set = "STO-3G",
+    charge = 0,
+    multiplicity = 1,
+    num atom = 12
+  }
+  D4h_2 {
+    coord = "D4h_2_coord.vel"
+    method = "HF",
+    basis set = "STO-3G",
+    charge = 0,
+    multiplicity = 1,
+    num atom = 11
+  }
+  D5 {
+    coord = "D5_coord.vel"
+    method = "HF",
+    basis set = "STO-3G",
+    charge = 0,
+    multiplicity = 1,
+    num atom = 21
+  }
+  D5d {
+    coord = "D5d_coord.vel"
+    method = "HF",
+    basis set = "STO-3G",
+    charge = 0,
+    multiplicity = 1,
+    num atom = 100
+  }
+  D5h {
+    coord = "D5h_coord.vel"
+    method = "HF",
+    basis set = "STO-3G",
+    charge = 0,
+    multiplicity = 1,
+    num atom = 50
+  }
+  D5h_1 {
+    coord = "D5h_1_coord.vel"
+    method = "HF",
+    basis set = "STO-3G",
+    charge = 0,
+    multiplicity = 1,
+    num atom = 21
+  }
+  D5h_2 {
+    coord = "D5h_2_coord.vel"
+    method = "HF",
+    basis set = "STO-3G",
+    charge = 0,
+    multiplicity = 1,
+    num atom = 70
+  }
+  D6 {
+    coord = "D6_coord.vel"
+    method = "HF",
+    basis set = "STO-3G",
+    charge = 0,
+    multiplicity = 1,
+    num atom = 25
+  }
+  D6h {
+    coord = "D6h_coord.vel"
+    method = "HF",
+    basis set = "STO-3G",
+    charge = 0,
+    multiplicity = 1,
+    num atom = 12
+  }
+  D6h_1 {
+    coord = "D6h_1_coord.vel"
+    method = "HF",
+    basis set = "STO-3G",
+    charge = 0,
+    multiplicity = 1,
+    num atom = 36
+  }
+  D_infh {
+    coord = "Dinfh_coord.vel"
+    method = "HF",
+    basis set = "STO-3G",
+    charge = 0,
+    multiplicity = 1,
+    num atom = 3
+  }
+  Ih {
+    coord = "Ih_coord.vel"
+    method = "HF",
+    basis set = "STO-3G",
+    charge = 0,
+    multiplicity = 1,
+    num atom = 60
+  }
+  Ih_1 {
+    coord = "Ih_1_coord.vel"
+    method = "HF",
+    basis set = "STO-3G",
+    charge = 0,
+    multiplicity = 1,
+    num atom = 24
+  }
+  Ih_2 {
+    coord = "Ih_2_coord.vel"
+    method = "HF",
+    basis set = "STO-3G",
+    charge = 0,
+    multiplicity = 1,
+    num atom = 40
+  }
+  O {
+    coord = "O_coord.vel"
+    method = "HF",
+    basis set = "STO-3G",
+    charge = 0,
+    multiplicity = 1,
+    num atom = 80
+  }
+  Oh {
+    coord = "Oh_coord.vel"
+    method = "HF",
+    basis set = "STO-3G",
+    charge = 0,
+    multiplicity = 1,
+    num atom = 16
+  }
+  Oh_1 {
+    coord = "Oh_1_coord.vel"
+    method = "HF",
+    basis set = "STO-3G",
+    charge = 0,
+    multiplicity = 1,
     num atom = 13
+  }
+  Oh_2 {
+    coord = "Oh_2_coord.vel"
+    method = "HF",
+    basis set = "STO-3G",
+    charge = 0,
+    multiplicity = 1,
+    num atom = 52
+  }
+  Oh_3 {
+    coord = "Oh_3_coord.vel"
+    method = "HF",
+    basis set = "STO-3G",
+    charge = 0,
+    multiplicity = 1,
+    num atom = 16
+  }
+  S4 {
+    coord = "S4_coord.vel"
+    method = "HF",
+    basis set = "STO-3G",
+    charge = 0,
+    multiplicity = 1,
+    num atom = 28
+  }
+  S6 {
+    coord = "S6_coord.vel"
+    method = "HF",
+    basis set = "STO-3G",
+    charge = 0,
+    multiplicity = 1,
+    num atom = 42
+  }
+  T {
+    coord = "T_coord.vel"
+    method = "HF",
+    basis set = "STO-3G",
+    charge = 0,
+    multiplicity = 1,
+    num atom = 5
+  }
+  Td {
+    coord = "Td_coord.vel"
+    method = "HF",
+    basis set = "STO-3G",
+    charge = 0,
+    multiplicity = 1,
+    num atom = 96
   }
 }
