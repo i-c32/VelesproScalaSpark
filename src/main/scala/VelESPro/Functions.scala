@@ -32,7 +32,7 @@ class MOp {
   }
 
   @tailrec
-  final def diag(matt: DataFrame, nMatTot: Int, iteration: Int = 0, maxIter: Int = 10): DataFrame = {
+  final def diag(matt: DataFrame, nMatTot: Int, colID: String, iteration: Int = 0, maxIter: Int = 10): DataFrame = {
     if (iteration >= maxIter) {
       println(s"Reached maximum iterations ($maxIter). Returning last matrix.")
       return matt
@@ -53,7 +53,7 @@ class MOp {
       val maxRow = offDim0.agg(max("Value").as("Value"),
           min("Row").as("Row"),
           first("Column").as("Column"),
-          first("Name").as("Name"))
+          first(colID).as(colID))
         .collect()(0)
 
       // Get the Row and Column values from the max value
@@ -75,7 +75,7 @@ class MOp {
             when(col("index") === 2, lit("Ajj"))
         )
 
-      val valAng2 = valAng1.groupBy(col("Name")).pivot(col("nam")).agg(first("Value"))
+      val valAng2 = valAng1.groupBy(col(colID)).pivot(col("nam")).agg(first("Value"))
       // Se calcula el coseno y el seno.
       val valAng3 = valAng2.withColumn("beta", (col("Ajj") - col("Aii")) / (col("Aij") * 2))
         .withColumn("sqrt_t", lit(1.0) + col("beta") * col("beta"))
@@ -126,7 +126,7 @@ class MOp {
       val matt4 = matt3.join(dfMP1.withColumnRenamed("Result", "F"), "index")
 
       val matt5 = matt4.drop("VDMT","Value").withColumnRenamed("F","Value")
-      diag(matt5, nMatTot, iteration + 1, maxIter)
+      diag(matt5, nMatTot, colID, iteration + 1, maxIter)
     }
   }
 }
