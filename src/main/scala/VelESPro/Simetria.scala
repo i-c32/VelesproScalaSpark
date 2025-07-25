@@ -29,9 +29,10 @@ class Simetria(mol: DataFrame, molec: DataFrame) {
   val molSEA = distSort1.join(SEA,Seq("Dist_at_s"), "inner")
   val molSEA1 = molSEA.drop("Dist_at_s","C_AtomID")
 
-  val molecSEA = molSEA1.select("Name", "SEA_ID").distinct()
+  val molecSEA = molSEA1.groupBy("Name", "SEA_ID")
+    .agg(count("*").as("numAtSEA"))
 
-  val nameIDSEA = molecSEA.select("SEA_ID").distinct().as[String].collect()
+  val nameIDSEA = molecSEA.filter($"numAtSEA" > 1).select("SEA_ID").distinct().as[String].collect()
 
   val molecSEA1 = oS.tensorIner(molSEA1, molecSEA, nameIDSEA, "SEA_ID")
 
