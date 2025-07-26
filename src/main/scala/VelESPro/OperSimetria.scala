@@ -109,7 +109,7 @@ class OperSimetria {
     }
 
     val InerTensor = results.reduceOption(_ union _).getOrElse(spark.emptyDataFrame)
-    molec.join(InerTensor,Seq(colID)).withColumnRenamed("collect_list(I_Tensor)","I_Tensor")
+    molec.join(InerTensor,Seq(colID),"left").withColumnRenamed("collect_list(I_Tensor)","I_Tensor")
 
   }
 

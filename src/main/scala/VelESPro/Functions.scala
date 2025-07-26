@@ -5,6 +5,7 @@ import VelESPro.App.spark
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions._
 import spark.implicits._
+import scala.math.{signum, abs => mabs, sqrt => msqrt}
 
 import scala.annotation.tailrec
 import org.apache.logging.log4j.{LogManager,Logger}
@@ -17,8 +18,6 @@ class MOp {
                   df2: DataFrame,
                  ): DataFrame = {
 
-    logger.info("Start multiplication")
-
     val result = df1.join(df2,$"C1" === $"R2").
       withColumn("Product", $"V1"*$"V2").
       groupBy($"R1",$"C2").
@@ -26,7 +25,6 @@ class MOp {
       orderBy("R1","C2").
       withColumn("index", monotonically_increasing_id())
 
-    logger.info("End multiplication")
     result.select("Result", "index")
 
   }
@@ -34,7 +32,7 @@ class MOp {
   @tailrec
   final def diag(matt: DataFrame, nMatTot: Int, colID: String, iteration: Int = 0, maxIter: Int = 10): DataFrame = {
     if (iteration >= maxIter) {
-      println(s"Reached maximum iterations ($maxIter). Returning last matrix.")
+      logger.warn(s"Reached maximum iterations ($maxIter). Returning last matrix.")
       return matt
     }
 
@@ -47,8 +45,6 @@ class MOp {
       //Define matrix size
       matt
     } else {
-      val cot = "cos(t)"
-      val sit = "sin(t)"
       // Find the maximum value in the "Value" column
       val maxRow = offDim0.agg(max("Value").as("Value"),
           min("Row").as("Row"),
@@ -77,56 +73,55 @@ class MOp {
 
       val valAng2 = valAng1.groupBy(col(colID)).pivot(col("nam")).agg(first("Value"))
       // Se calcula el coseno y el seno.
-      val valAng3 = valAng2.withColumn("beta", (col("Ajj") - col("Aii")) / (col("Aij") * 2))
-        .withColumn("sqrt_t", lit(1.0) + col("beta") * col("beta"))
-        .withColumn("t", sign(col("beta")) / (abs(col("beta")) + sqrt(col("sqrt_t"))))
-        .withColumn(cot, lit(1.0) / sqrt(lit(1.0) + col("t") * col("t")))
-        .withColumn(sit, col(cot )* col("t")).collect()(0)
+      logger.info("Obtain the sin and cos")
+      val row = valAng2.select(
+        (col("Ajj") - col("Aii")) / (col("Aij") * 2) as "beta"
+      ).first()
 
-      // Se obtiene el valor del coseno y del seno
-      val ct = valAng3.getAs[Double](cot)
-      val st = valAng3.getAs[Double](sit)
+      val beta = row.getAs[Double]("beta")
+      val sqrtT = 1.0 + beta * beta
+      val t = signum(beta) / (mabs(beta) + msqrt(sqrtT))
+      val ct = 1.0 / msqrt(1.0 + t * t)
+      val st = ct * t
 
-      //Define matrix size
-      //Se tiene que transformar en integer
-      val rowVI = rowValue.toString.toInt
-      val colVI = colValue.toString.toInt
       // Generate Identity Matrix as a flattened list
       val identityMatrixValues = Array.tabulate(nMat, nMat) { (i, j) =>
-        val isIRowVI = i == rowVI
-        val isIColVI = i == colVI
-        val isJRowVI = j == rowVI
-        val isJColVI = j == colVI
-
-        (isIRowVI, isIColVI, isJRowVI, isJColVI) match {
-          case (true, _, true, _)  => ct         // (i == rowVI && j == rowVI)
-          case (_, true, _, true)  => ct         // (i == colVI && j == colVI)
-          case (true, _, _, true)  => st         // (i == rowVI && j == colVI)
-          case (_, true, true, _)  => -st        // (i == colVI && j == rowVI)
-          case (_, _, _, _) if i == j => 1.0     // identity diagonal
-          case _ => 0.0
+        (i, j) match {
+          case (`rowValue`, `rowValue`) => ct
+          case (`colValue`, `colValue`) => ct
+          case (`rowValue`, `colValue`) => st
+          case (`colValue`, `rowValue`) => -st
+          case _ if i == j        => 1.0
+          case _                  => 0.0
         }
       }.flatten
-      // Convert values into a DataFrame
+      logger.info(s"Matrix Multiplication, iteration: $iteration")
+      // Create identity DataFrame with index
       val identityDF = identityMatrixValues.zipWithIndex.toSeq.toDF("DiagM", "index")
 
-      val matt1 = matt.drop("DiagM")
-      val matt2 = matt1.join(identityDF, Seq("index"))
+      val matt1 = matt.drop("DiagM").join(identityDF, Seq("index"))
 
-      val dff1 = matt2.select(col("Row").alias("R1"),col("Column").alias("C1"),col("Value").alias("V1"))
-      val dff2 = matt2.select(col("Row").alias("R2"),col("Column").alias("C2"),col("DiagM").alias("V2"))
-      val dfMP = compMatProd(dff1, dff2)
-      val matt3 = matt2.join(dfMP.withColumnRenamed("Result", "VDMT"), "index")
+      logger.info(s"First Matrix Multiplication")
+      val dfMP = compMatProd(
+        matt1.select(col("Row").alias("R1"),col("Column").alias("C1"),col("Value").alias("V1")),
+        matt1.select(col("Row").alias("R2"),col("Column").alias("C2"),col("DiagM").alias("V2"))
+      )
+      logger.info(s"First join")
+      val matt3 = matt1.join(dfMP.withColumnRenamed("Result", "VDMT"), "index")
 
       // Se intercambian filas y columnas para que sea la transpuesta
-      val dff3 = matt3.select(col("Row").alias("C1"),col("Column").alias("R1"),col("DiagM").alias("V1"))
-      val dff4 = matt3.select(col("Row").alias("R2"),col("Column").alias("C2"),col("VDMT").alias("V2"))
-      val dfMP1 = compMatProd(dff3, dff4)
+      logger.info(s"Second Matrix Multiplication")
+      val dfMP1 = compMatProd(
+        matt3.select(col("Row").alias("C1"),col("Column").alias("R1"),col("DiagM").alias("V1")),
+        matt3.select(col("Row").alias("R2"),col("Column").alias("C2"),col("VDMT").alias("V2"))
+      )
 
-      val matt4 = matt3.join(dfMP1.withColumnRenamed("Result", "F"), "index")
+      logger.info(s"Second join")
+      val matt4 = matt3.join(dfMP1.withColumnRenamed("Result", "F"), "index").
+        drop("VDMT","Value").
+        withColumnRenamed("F","Value")
 
-      val matt5 = matt4.drop("VDMT","Value").withColumnRenamed("F","Value")
-      diag(matt5, nMatTot, colID, iteration + 1, maxIter)
+      diag(matt4, nMatTot, colID, iteration + 1, maxIter)
     }
   }
 }
