@@ -6,7 +6,7 @@ import org.apache.spark.sql.functions.{abs, col, expr}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should._
 
-class SimetriaTest extends AnyFlatSpec with Matchers{
+class OperSimetriaTest extends AnyFlatSpec with Matchers{
 
   import spark.implicits._
 
@@ -26,7 +26,17 @@ class SimetriaTest extends AnyFlatSpec with Matchers{
 
   "Simetria" should "obtain the inertia matrix" in {
     //val Eps = 1e-5
+    val oS = new OperSimetria
 
+    val resultMol = oS.matIner(testmol, "Name").filter(col("Row") === col("Column"))
+
+    val expectedMol= Seq((0, 0, 2.9322820011995119),
+      (1, 1, 5.4090993589908090),
+      (2, 2, 8.3413813601903222)).toDF("Row","Column","Value_exp")
+
+    val joined = resultMol.join(expectedMol,Seq("Row"))
+
+    assert(joined.filter(abs($"Value" - $"Value_exp") > 1e-6).count() === 0)
   }
 
 }

@@ -57,7 +57,7 @@ class FunctionsTest extends AnyWordSpec with Matchers {
         (8, "A", "2", "2", 71.16608473537926)
       ).toDF("index", "Name", "Row", "Column", "Value")
 
-      val result = mtOp.diag(df, n)
+      val result = mtOp.diag(df, n, "Name")
       val result1 = result.filter(col("Row")===col("Column")).select("Value","index")
 
       val expected = Seq(
