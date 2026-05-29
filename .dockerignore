@@ -1,0 +1,9 @@
+# .dockerignore
+.env
+.git/
+.data/
+.config/
+!.config/man/*.scd
+__pycache__/
+*.pyc
+.venv/

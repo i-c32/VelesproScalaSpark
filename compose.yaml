@@ -1,0 +1,71 @@
+services:
+  # ────────────────────────────────────────────────────────────────────────────
+  # ENTORNO DE DESARROLLO
+  # • Imagen con Neovim, git, nodejs, java 17 y maven [dev].
+  # • El código se monta desde el host (edición en caliente).
+  # ────────────────────────────────────────────────────────────────────────────
+  dev:
+    build:
+      context: .
+      dockerfile: Containerfile
+      target: development
+      args:
+        UID: "${UID:-1000}"
+        GID: "${GID:-1000}"
+
+    image: velespro-scala:dev
+    container_name: velespro_scala_dev
+    hostname: fedora-veles-scala
+    env_file: .env
+    environment:
+      - MOD_PROMPT=\001\033[1;36m\002(Velespro-Scala-dev)\001\033[0m\002
+      # Opcional: Aumentar la memoria para Maven/Spark en local
+      - MAVEN_OPTS="-Xmx2g"
+
+    userns_mode: keep-id
+
+    volumes:
+      # Sincroniza la config de Neovim local y bash
+      - ./.config/nvim:/home/developer/.config/nvim:Z,ro
+      - ./.config/bash/bashrc:/home/developer/.bashrc:Z,ro
+
+      # Persistencia de plugins, estado y comandos
+      - ./.data/fedora/nvim-data:/home/developer/.local/share/nvim:Z,U
+      - ./.data/fedora/nvim-state:/home/developer/.local/state/nvim:Z,U
+      - ./.data/.bash_history:/home/developer/.bash_history:Z
+
+      # CACHÉ DE MAVEN: Vital para no descargar dependencias constantemente
+      - ./.data/.m2:/home/developer/.m2:Z,U
+
+      # Tu código y configuración del proyecto
+      - ./src:/home/developer/workspace/src:Z
+      - ./pom.xml:/home/developer/workspace/pom.xml:Z,ro
+      - ./.git:/home/developer/workspace/.git:Z,ro
+
+    working_dir: /home/developer/workspace
+    stdin_open: true
+    tty: true
+    restart: on-failure
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # ENTORNO DE PRODUCCIÓN
+  # • Imagen mínima: Runtime JRE de Java 17 + el JAR compilado.
+  # ────────────────────────────────────────────────────────────────────────────
+  prod:
+    build:
+      context: .
+      dockerfile: Containerfile
+      target: production
+      args:
+        UID: "${UID:-1000}"
+        GID: "${GID:-1000}"
+
+    image: velespro-scala:prod
+    container_name: velespro_scala_prod
+    hostname: fedora-veles-scala-prod
+
+    env_file: .env
+
+    userns_mode: keep-id
+    working_dir: /home/developer/workspace
+    restart: unless-stopped

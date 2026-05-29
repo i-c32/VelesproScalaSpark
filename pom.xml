@@ -20,14 +20,14 @@
   </developers>
 
   <properties>
-    <maven.compiler.source>17</maven.compiler.source>
-    <maven.compiler.target>17</maven.compiler.target>
+    <maven.compiler.source>21</maven.compiler.source>
+    <maven.compiler.target>21</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <scala.version>2.13.18</scala.version>
     <scalatest.version>3.2.19</scalatest.version>
     <scala.compat.version>2.13</scala.compat.version>
     <spec2.version>4.2.0</spec2.version>
-    <spark_mllib.version>3.5.4</spark_mllib.version>
+    <spark_mllib.version>4.1.2</spark_mllib.version>
     <junit.version>4.13.1</junit.version>
     <spark.version>4.1.1</spark.version>
     <scalac_scoverage.version>2.5.2</scalac_scoverage.version>

@@ -1,0 +1,86 @@
+# Cargar el bashrc por defecto del sistema
+[[ -f /etc/bash.bashrc ]] && . /etc/bash.bashrc
+
+################ Palette Color
+BRed='\001\033[1;31m\002'
+BGreen='\001\033[1;32m\002'
+BYellow='\001\033[1;33m\002'
+BBlue='\001\033[1;34m\002'
+BCyan='\001\033[1;36m\002'
+BWhite='\001\033[1;37m\002'
+LGrey='\001\033[0;37m\002'
+C_White='\001\033[0;37m\002'
+C_Green='\001\033[0;32m\002'
+Color_Off='\001\033[0m\002'
+
+# Función de Git
+get_git_info() {
+    # 1. Verificamos si es un repositorio Git
+    if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then return; fi
+    
+    local branch=$(git branch --show-current 2>/dev/null)
+    local status_git=$(git status --porcelain 2>/dev/null)
+    local marks=""
+    
+    # 2. Indicadores locales (Cambios sin commitear)
+    echo "$status_git" | grep -q '^??' && marks+="?"       # Untracked
+    echo "$status_git" | grep -q '^[MARC]' && marks+="+"   # Staged
+    echo "$status_git" | grep -q '^.[MTD]' && marks+="*"   # Unstaged
+    
+    # 3. Indicadores remotos (Sincronización con el servidor)
+    # @{u} significa "upstream" (la rama remota asociada, ej: origin/main)
+    local ahead=$(git rev-list --count @{u}..HEAD 2>/dev/null)
+    local behind=$(git rev-list --count HEAD..@{u} 2>/dev/null)
+    
+    [[ -n "$ahead" && "$ahead" -gt 0 ]] && marks+="↑${ahead}"
+    [[ -n "$behind" && "$behind" -gt 0 ]] && marks+="↓${behind}"
+    
+    # 4. Asignación de color: Rojo si hay cualquier alteración o desincronización
+    local branch_color=$BGreen
+    [[ -n $marks ]] && branch_color=$BRed
+    
+    # 5. Salida limpia para el prompt
+    echo -ne "${BWhite} ${branch_color}${branch}${BYellow}${marks}${BWhite}"
+}
+
+build_prompt() {
+    local EXIT_STATUS=$?
+    
+    # Cara dinámica
+    local face
+    if [ $EXIT_STATUS -eq 0 ]; then
+        face="${BGreen}^_^"
+    else
+        face="${BRed}O_O"
+    fi
+
+    # CORRECCIÓN: Quitamos los \[ y \] de todos los componentes
+    local p_mod="${MOD_PROMPT}" # Viene de Lmod
+    local p_mod1="${MOD_PROMPT1}" # Viene de Lmod para modelos
+    local p_t="${BWhite}[${BYellow}\t${BWhite}]"
+    local p_u="${BWhite}[${BCyan}\u${BWhite}]"
+    local p_h="${BWhite}[${BBlue}${HOSTNAME%%.*}${BWhite}]"
+    local p_w="${C_White}[${C_Green}\w${C_White}]"
+
+    # Ensamblado Final
+    # CORRECCIÓN: Quitamos los \[ y \] aquí también
+    export PS1="${C_White}┌─${p_mod}─${p_t}─${p_u}─${p_h}─${p_w}─[${face}${BWhite}]\n${C_White}└─${p_mod1}─\$(get_git_info)${C_White}──>> ${LGrey}"
+}
+
+PROMPT_COMMAND=build_prompt
+
+# enable color support of ls and also add handy aliases
+if [ -x /usr/bin/dircolors ]; then
+    test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
+    LS_COLORS='di=1;36:ex=92:*.pdf=38;5;208:*.tar=31:*.tar.xz=31:*.gz=31:*.zip=31:*.png=35:*.jpeg=35:*.jpg=35:*.tga=35:*.tex=33'
+    export LS_COLORS
+    alias ls='ls --color=auto'
+
+    alias grep='grep --color=auto'
+fi
+
+# colored GCC warnings and errors
+export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
+
+# Aliases
+alias vi="nvim"
