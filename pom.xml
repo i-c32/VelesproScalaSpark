@@ -23,14 +23,18 @@
     <maven.compiler.source>17</maven.compiler.source>
     <maven.compiler.target>17</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <scala.version>2.13.16</scala.version>
+    <scala.version>2.13.18</scala.version>
     <scalatest.version>3.2.19</scalatest.version>
     <scala.compat.version>2.13</scala.compat.version>
     <spec2.version>4.2.0</spec2.version>
     <spark_mllib.version>3.5.4</spark_mllib.version>
-    <spark.version>4.0.0</spark.version>
+    <junit.version>4.13.1</junit.version>
+    <spark.version>4.1.1</spark.version>
+    <scalac_scoverage.version>2.5.2</scalac_scoverage.version>
     <mockito.version>2.0.0</mockito.version>
+    <slf4j.version>2.0.13</slf4j.version>
     <log4j.version>2.23.1</log4j.version>
+    <jackson_core.version>2.17.2</jackson_core.version>
     <typesafe.version>1.4.3</typesafe.version>
     <!-- Sonar -->
     <sonar.organization>noilix</sonar.organization>
@@ -51,6 +55,11 @@
     </dependency>
     <dependency>
       <groupId>org.apache.spark</groupId>
+      <artifactId>spark-mllib_${scala.compat.version}</artifactId>
+      <version>${spark_mllib.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.spark</groupId>
       <artifactId>spark-core_${scala.compat.version}</artifactId>
       <version>${spark.version}</version>
       <scope>compile</scope>
@@ -60,6 +69,22 @@
       <artifactId>spark-sql_${scala.compat.version}</artifactId>
       <version>${spark.version}</version>
       <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>${slf4j.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-reload4j</artifactId>
+      <version>${slf4j.version}</version>
+    </dependency>
+    <!-- https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-core -->
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-core</artifactId>
+      <version>${jackson_core.version}</version>
     </dependency>
     <!-- https://mvnrepository.com/artifact/com.typesafe/config -->
     <dependency>
@@ -81,6 +106,12 @@
 
     <!-- Test -->
     <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>${junit.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>org.scalatest</groupId>
       <artifactId>scalatest_${scala.compat.version}</artifactId>
       <version>${scalatest.version}</version>
@@ -93,10 +124,21 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-slf4j2-impl</artifactId>
+      <version>${log4j.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>org.scalactic</groupId>
       <artifactId>scalactic_${scala.compat.version}</artifactId>
       <version>${scalatest.version}</version>
-      <scope>test</scope>
+    </dependency>
+    <!-- https://mvnrepository.com/artifact/org.scoverage/scalac-scoverage-plugin -->
+    <dependency>
+      <groupId>org.scoverage</groupId>
+      <artifactId>scalac-scoverage-plugin_${scala.version}</artifactId>
+      <version>${scalac_scoverage.version}</version>
     </dependency>
     <dependency>
       <groupId>org.mockito</groupId>
@@ -121,6 +163,37 @@
     <sourceDirectory>src/main/scala</sourceDirectory>
     <testSourceDirectory>src/test/scala</testSourceDirectory>
     <plugins>
+      <!-- include the main manifest in the build y las dependencias-->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>3.5.0</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            <configuration>
+              <transformers>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                  <mainClass>VelESPro.App</mainClass>
+                </transformer>
+              </transformers>
+              <filters>
+                <filter>
+                  <artifact>*:*</artifact>
+                  <excludes>
+                    <exclude>META-INF/*.SF</exclude>
+                    <exclude>META-INF/*.DSA</exclude>
+                    <exclude>META-INF/*.RSA</exclude>
+                  </excludes>
+                </filter>
+              </filters>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
       <plugin>
         <!-- see http://davidb.github.com/scala-maven-plugin -->
         <groupId>net.alchim31.maven</groupId>
@@ -188,7 +261,6 @@
       <plugin>
         <groupId>org.scoverage</groupId>
         <artifactId>scoverage-maven-plugin</artifactId>
-        <version>2.1.0</version>
         <executions>
           <execution>
             <goals>
