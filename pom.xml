@@ -27,9 +27,9 @@
     <scalatest.version>3.2.19</scalatest.version>
     <scala.compat.version>2.13</scala.compat.version>
     <spec2.version>4.2.0</spec2.version>
-    <spark_mllib.version>4.1.2</spark_mllib.version>
+    <spark_mllib.version>4.1.3</spark_mllib.version>
     <junit.version>4.13.1</junit.version>
-    <spark.version>4.1.1</spark.version>
+    <spark.version>4.1.3</spark.version>
     <scalac_scoverage.version>2.5.2</scalac_scoverage.version>
     <mockito.version>2.0.0</mockito.version>
     <slf4j.version>2.0.13</slf4j.version>
@@ -203,6 +203,7 @@
           <args>
             <arg>-deprecation</arg>
             <arg>-feature</arg>
+            <arg>-release:21</arg>
           </args>
         </configuration>
         <executions>
@@ -225,11 +226,6 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <version>3.5.3</version>
         <configuration>
-          <!-- Avoid class org.apache.spark.storage.StorageUtils$ (in unnamed module @0x7414e3cb) cannot access class sun.nio.ch.DirectBuffer (in module java.base)
-          Tests will be run with scalatest-maven-plugin instead -->
-          <argLine>
-            --illegal-access=permit
-          </argLine>
           <skipTests>true</skipTests>
         </configuration>
       </plugin>

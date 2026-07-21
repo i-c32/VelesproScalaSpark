@@ -11,7 +11,7 @@ ARG GID=1000
 # Versiones objetivo (extraídas de tu pom.xml)
 ENV MAVEN_VERSION=3.9.16
 ENV SCALA_VERSION=2.13.18
-ENV SPARK_VERSION=4.1.2
+ENV SPARK_VERSION=4.1.3
 ENV HADOOP_VERSION=3
 
 # Instalamos utilidades básicas y Java 17
@@ -103,6 +103,9 @@ RUN mkdir -p /usr/local/share/man/man1 && \
 WORKDIR /home/$USERNAME/workspace
 USER $USERNAME
 
+# Añadir excepción de seguridad de Git para el volumen montado
+RUN git config --global --add safe.directory /home/developer/workspace
+
 CMD ["/bin/bash"]
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -112,22 +115,22 @@ CMD ["/bin/bash"]
 FROM dev-tools AS builder
 WORKDIR /home/$USERNAME/workspace
 COPY --chown=$USERNAME:$USERNAME pom.xml ./
-RUN mvn dependency:go-offline || true
+RUN mvn -B dependency:go-offline || true
 
 COPY --chown=$USERNAME:$USERNAME src/ ./src/
-RUN mvn clean package -DskipTests
+RUN mvn -B clean package -DskipTests
 
 # ══════════════════════════════════════════════════════════════════════════════
 # STAGE 5 — production
 # Imagen final ligera: solo JRE + Spark (si es necesario para correr la app) + JAR
 # ══════════════════════════════════════════════════════════════════════════════
-FROM docker.io/library/eclipse-temurin:17-jre-jammy AS production
+FROM docker.io/library/eclipse-temurin:21-jre-jammy AS production
 
 ARG USERNAME=developer
 ARG UID=1000
 ARG GID=1000
 
-ENV SPARK_VERSION=3.5.4
+ENV SPARK_VERSION=4.1.3
 ENV HADOOP_VERSION=3
 ENV SPARK_HOME=/opt/spark
 ENV PATH="$SPARK_HOME/bin:$PATH"

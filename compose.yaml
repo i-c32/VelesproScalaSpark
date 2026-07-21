@@ -39,7 +39,7 @@ services:
 
       # Tu código y configuración del proyecto
       - ./src:/home/developer/workspace/src:Z
-      - ./pom.xml:/home/developer/workspace/pom.xml:Z,ro
+      - ./pom.xml:/home/developer/workspace/pom.xml:Z
       - ./.git:/home/developer/workspace/.git:Z,ro
 
     working_dir: /home/developer/workspace
