@@ -20,7 +20,7 @@ services:
     environment:
       - MOD_PROMPT=\001\033[1;36m\002(Velespro-Scala-dev)\001\033[0m\002
       # Opcional: Aumentar la memoria para Maven/Spark en local
-      - MAVEN_OPTS="-Xmx2g"
+      - MAVEN_OPTS=-Xmx2g
 
     userns_mode: keep-id
 
